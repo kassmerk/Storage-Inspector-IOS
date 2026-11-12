@@ -30,6 +30,9 @@
 		ABCDEF0123456789ABCDEF54 /* SettingsViewRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF34 /* SettingsViewRows.swift */; };
 		ABCDEF0123456789ABCDEF55 /* AboutSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF35 /* AboutSheet.swift */; };
 		ABCDEF0123456789ABCDEF56 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF36 /* Assets.xcassets */; };
+		ABCDEF0123456789ABCDEF57 /* AppIconStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF37 /* AppIconStyle.swift */; };
+		ABCDEF0123456789ABCDEF58 /* AppIconManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF38 /* AppIconManager.swift */; };
+		ABCDEF0123456789ABCDEF59 /* AppIconCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF39 /* AppIconCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +60,9 @@
 		ABCDEF0123456789ABCDEF34 /* SettingsViewRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewRows.swift; sourceTree = "<group>"; };
 		ABCDEF0123456789ABCDEF35 /* AboutSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSheet.swift; sourceTree = "<group>"; };
 		ABCDEF0123456789ABCDEF36 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF37 /* AppIconStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconStyle.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF38 /* AppIconManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconManager.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF39 /* AppIconCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +130,7 @@
 			children = (
 				ABCDEF0123456789ABCDEF25 /* StorageModels.swift */,
 				ABCDEF0123456789ABCDEF26 /* DemoCatalog.swift */,
+				ABCDEF0123456789ABCDEF37 /* AppIconStyle.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -134,6 +141,7 @@
 				ABCDEF0123456789ABCDEF27 /* DeviceStorage.swift */,
 				ABCDEF0123456789ABCDEF28 /* SandboxFiles.swift */,
 				ABCDEF0123456789ABCDEF29 /* StorageStore.swift */,
+				ABCDEF0123456789ABCDEF38 /* AppIconManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -168,6 +176,7 @@
 				ABCDEF0123456789ABCDEF33 /* SettingsViewSections.swift */,
 				ABCDEF0123456789ABCDEF34 /* SettingsViewRows.swift */,
 				ABCDEF0123456789ABCDEF35 /* AboutSheet.swift */,
+				ABCDEF0123456789ABCDEF39 /* AppIconCard.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -279,6 +288,9 @@
 				ABCDEF0123456789ABCDEF53 /* SettingsViewSections.swift in Sources */,
 				ABCDEF0123456789ABCDEF54 /* SettingsViewRows.swift in Sources */,
 				ABCDEF0123456789ABCDEF55 /* AboutSheet.swift in Sources */,
+				ABCDEF0123456789ABCDEF57 /* AppIconStyle.swift in Sources */,
+				ABCDEF0123456789ABCDEF58 /* AppIconManager.swift in Sources */,
+				ABCDEF0123456789ABCDEF59 /* AppIconCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

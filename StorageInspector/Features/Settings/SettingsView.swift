@@ -17,6 +17,7 @@ struct SettingsView: View {
 
                     supportCard
                     preferencesCard
+                    AppIconCard()
                     aboutCard
                     footnote
                 }

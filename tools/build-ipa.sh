@@ -53,6 +53,39 @@ if [ -n "$ICON_SRC" ]; then
   /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconFiles array" "$APP/Info.plist" >/dev/null || true
   /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconFiles:0 string AppIcon60x60" "$APP/Info.plist" >/dev/null || true
 fi
+echo "==> Alternate icons (Settings -> App Icon)"
+VARIANT_DIR=""
+for candidate in "$ROOT/StorageInspector/Resources/AppIconVariants" "$ROOT/Resources/AppIconVariants"; do
+  if [ -d "$candidate" ]; then
+    VARIANT_DIR="$candidate"
+    break
+  fi
+done
+if [ -n "$VARIANT_DIR" ]; then
+  ALT_KEYS=""
+  for entry in "Indigo:icon-indigo" "Graphite:icon-graphite" "Crimson:icon-crimson"; do
+    KEY="${entry%%:*}"
+    FILE="${entry##*:}"
+    SRC="$VARIANT_DIR/$FILE.png"
+    if [ ! -f "$SRC" ]; then
+      echo "warning: $SRC is missing - the $KEY icon is skipped"
+      continue
+    fi
+    sips -z 120 120 "$SRC" --out "$APP/Icon$KEY@2x.png" >/dev/null
+    sips -z 180 180 "$SRC" --out "$APP/Icon$KEY@3x.png" >/dev/null
+    ALT_KEYS="$ALT_KEYS $KEY"
+  done
+  if [ -n "$ALT_KEYS" ]; then
+    /usr/libexec/PlistBuddy -c "Delete :CFBundleAlternateIcons" "$APP/Info.plist" >/dev/null 2>&1 || true
+    /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons dict" "$APP/Info.plist"
+    for KEY in $ALT_KEYS; do
+      /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons:$KEY dict" "$APP/Info.plist"
+      /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons:$KEY:CFBundleIconFiles array" "$APP/Info.plist"
+      /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons:$KEY:CFBundleIconFiles:0 string Icon$KEY" "$APP/Info.plist"
+    done
+    echo "Alternate icons:$ALT_KEYS (orange stays the primary icon)"
+  fi
+fi
 /usr/libexec/PlistBuddy -c "Add :LSRequiresIPhoneOS bool true" "$APP/Info.plist" >/dev/null 2>&1 || true
 
 echo "==> Removing stale signatures"
