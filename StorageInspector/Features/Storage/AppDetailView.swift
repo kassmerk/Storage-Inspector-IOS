@@ -1,9 +1,12 @@
 import SwiftUI
+import UIKit
 
 /// Detail screen in the style of the iOS "iPhone Storage › App" page, with an extra
 /// "View Files" shortcut to the app sandbox browser.
 struct AppDetailView: View {
     let app: AppItem
+    /// The resolved icon (device, bundled or store artwork) for the header tile.
+    var artwork: UIImage? = nil
 
     @EnvironmentObject var store: StorageStore
     @Environment(\.dismiss) var dismiss
@@ -20,7 +23,9 @@ struct AppDetailView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     headerCard
-                    viewFilesButton
+                    if showsSandboxLink {
+                        viewFilesButton
+                    }
                     actions
                 }
                 .padding(.horizontal, 16)
@@ -46,10 +51,22 @@ struct AppDetailView: View {
         }
     }
 
+    /// The sandbox browser can only show *this* app's files, so the shortcut is hidden for the
+    /// apps that really belong to someone else on the device.
+    private var showsSandboxLink: Bool {
+        !app.isReal || app.hasKnownSize
+    }
+
     var headerCard: some View {
         VStack(spacing: 0) {
             HStack(spacing: 14) {
-                AppIconView(symbol: app.symbol, tint: app.tint, size: 62, cornerRadius: 15)
+                AppIconView(
+                    symbol: app.symbol,
+                    tint: app.tint,
+                    size: 62,
+                    cornerRadius: 15,
+                    artwork: artwork
+                )
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(app.name)
@@ -68,11 +85,11 @@ struct AppDetailView: View {
             .padding(.bottom, 14)
 
             Separator(leading: 0)
-            InfoRow(title: "App Size", value: Formatters.bytes(app.appSize, unit: unit))
+            InfoRow(title: "App Size", value: Formatters.size(app.appSize, known: app.hasKnownSize, unit: unit))
             Separator(leading: 0)
-            InfoRow(title: "Documents & Data", value: Formatters.bytes(app.dataSize, unit: unit))
+            InfoRow(title: "Documents & Data", value: Formatters.size(app.dataSize, known: app.hasKnownSize, unit: unit))
             Separator(leading: 0)
-            InfoRow(title: "Total", value: Formatters.bytes(app.totalSize, unit: unit))
+            InfoRow(title: "Total", value: Formatters.size(app.totalSize, known: app.hasKnownSize, unit: unit))
         }
         .cardStyle(padding: 18)
     }
@@ -103,11 +120,13 @@ struct AppDetailView: View {
 
     var actions: some View {
         VStack(spacing: 10) {
-            if app.isReal {
+            if app.isReal && app.hasKnownSize {
                 ActionButton(title: "Refresh Size", kind: .standard) {
                     store.refresh()
                 }
                 caption("Recalculated from this app's bundle and data container.")
+            } else if app.isReal {
+                caption("This row comes from iOS itself (private installed-apps API): the name, the version and the icon are real, but iOS keeps the size of other apps private, so the numbers above show a dash. iOS also does not let one app delete or offload another.")
             } else {
                 ActionButton(title: "Offload App") { }
                 caption("Preview only: iOS does not let an app offload other apps. On a real iPhone this lives in Settings › General › iPhone Storage.")

@@ -1,3 +1,20 @@
+# Codemagic CI/CD — запасной путь к неподписанному IPA.
+#
+# Зачем: GitHub Actions перестал выделять этому репозиторию macOS-раннеры
+# ("The job was not acquired by Runner of type hosted even after multiple attempts",
+# при этом githubstatus.com зелёный и минуты Actions не израсходованы).
+# Codemagic даёт 500 бесплатных macOS-минут в месяц и собирает прямо из GitHub.
+#
+# Как запустить:
+#   1. https://codemagic.io -> Sign up with GitHub -> Add application -> выбрать
+#      репозиторий Storage-Inspector-iOS (Codemagic сам прочитает этот файл).
+#   2. Поля bundle id менять не нужно: он задан ниже в BUNDLE_ID.
+#   3. Start new build -> workflow "ios-unsigned" -> по окончании скачать
+#      StorageInspector-unsigned.ipa из раздела Artifacts.
+#
+# Скрипт сборки — тот же, что и локально: tools/build-ipa.sh (xcodebuild без
+# подписи + «рыхлые» иконки + CFBundleAlternateIcons + Payload zip).
+
 workflows:
   ios-unsigned:
     name: StorageInspector unsigned IPA
@@ -6,6 +23,7 @@ workflows:
     environment:
       xcode: latest
       vars:
+        # Должен совпадать с App ID в профиле Feather (wildcard-профиль — можно любой).
         BUNDLE_ID: com.example.storageinspector
     triggering:
       events:
@@ -16,6 +34,16 @@ workflows:
         - pattern: master
           include: true
     scripts:
+      - name: Normalize line endings
+        script: |
+          # The repository is edited on Windows, so files may arrive with CRLF. bash refuses to
+          # run such a script ("set: pipefail\r: invalid option name") and dies in a second,
+          # which is what a 4-second "Build unsigned IPA" failure looks like. Strip CR first.
+          find . -type f \( -name '*.sh' -o -name '*.swift' -o -name '*.yml' -o -name '*.yaml' \
+            -o -name '*.pbxproj' -o -name '*.plist' -o -name '*.xcscheme' \) -print0 \
+            | xargs -0 perl -pi -e 's/\r\n/\n/g'
+          chmod +x tools/build-ipa.sh
+          file tools/build-ipa.sh
       - name: Show toolchain
         script: |
           xcodebuild -version

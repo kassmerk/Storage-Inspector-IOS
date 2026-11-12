@@ -33,6 +33,9 @@
 		ABCDEF0123456789ABCDEF57 /* AppIconStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF37 /* AppIconStyle.swift */; };
 		ABCDEF0123456789ABCDEF58 /* AppIconManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF38 /* AppIconManager.swift */; };
 		ABCDEF0123456789ABCDEF59 /* AppIconCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF39 /* AppIconCard.swift */; };
+		ABCDEF0123456789ABCDEF5A /* AppIconLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF3A /* AppIconLoader.swift */; };
+		ABCDEF0123456789ABCDEF5C /* InstalledAppsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF3C /* InstalledAppsProvider.swift */; };
+		ABCDEF0123456789ABCDEF5D /* AppIcons in Resources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF3D /* AppIcons */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +66,9 @@
 		ABCDEF0123456789ABCDEF37 /* AppIconStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconStyle.swift; sourceTree = "<group>"; };
 		ABCDEF0123456789ABCDEF38 /* AppIconManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconManager.swift; sourceTree = "<group>"; };
 		ABCDEF0123456789ABCDEF39 /* AppIconCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconCard.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF3A /* AppIconLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconLoader.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF3C /* InstalledAppsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledAppsProvider.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF3D /* AppIcons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AppIcons; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +148,8 @@
 				ABCDEF0123456789ABCDEF28 /* SandboxFiles.swift */,
 				ABCDEF0123456789ABCDEF29 /* StorageStore.swift */,
 				ABCDEF0123456789ABCDEF38 /* AppIconManager.swift */,
+				ABCDEF0123456789ABCDEF3A /* AppIconLoader.swift */,
+				ABCDEF0123456789ABCDEF3C /* InstalledAppsProvider.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -185,6 +193,7 @@
 			isa = PBXGroup;
 			children = (
 				ABCDEF0123456789ABCDEF36 /* Assets.xcassets */,
+				ABCDEF0123456789ABCDEF3D /* AppIcons */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -256,6 +265,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ABCDEF0123456789ABCDEF56 /* Assets.xcassets in Resources */,
+				ABCDEF0123456789ABCDEF5D /* AppIcons in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +301,8 @@
 				ABCDEF0123456789ABCDEF57 /* AppIconStyle.swift in Sources */,
 				ABCDEF0123456789ABCDEF58 /* AppIconManager.swift in Sources */,
 				ABCDEF0123456789ABCDEF59 /* AppIconCard.swift in Sources */,
+				ABCDEF0123456789ABCDEF5A /* AppIconLoader.swift in Sources */,
+				ABCDEF0123456789ABCDEF5C /* InstalledAppsProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

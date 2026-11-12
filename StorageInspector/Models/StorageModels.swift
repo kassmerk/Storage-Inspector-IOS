@@ -4,20 +4,25 @@ import SwiftUI
 /// One application row on the Storage screen.
 struct AppItem: Identifiable, Hashable {
     let id: String
+    /// Bundle identifier, when known: it is what `AppIconLoader` looks the icon up with
+    /// (the icon of the installed app, the App Store artwork, or a bundled PNG).
+    var bundleID: String? = nil
     let name: String
     let developer: String
     let version: String
-    /// SF Symbol used as a stand-in for the real app icon.
+    /// SF Symbol used as a stand-in when no picture could be resolved.
     let symbol: String
-    /// Two or three colors of the icon gradient.
+    /// Two or three colors of the icon gradient behind that symbol.
     let tint: [Color]
     /// Size of the app bundle itself.
     let appSize: Int64
     /// Size of Documents & Data (container size minus bundle).
     let dataSize: Int64
     let lastUsed: String
-    /// `true` for numbers that were really measured on this device.
+    /// `true` for names that come from the device itself (this app, or the real apps list).
     let isReal: Bool
+    /// `false` when iOS hides the size — every app except this one. The UI shows a dash then.
+    var hasKnownSize: Bool = true
 
     var totalSize: Int64 { appSize + dataSize }
 

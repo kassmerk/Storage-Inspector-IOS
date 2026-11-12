@@ -3,6 +3,11 @@ import SwiftUI
 /// iOS does not let an app read how much space other apps take: the list below is a
 /// demo dataset so the UI can show realistic numbers. Everything the app *can* measure
 /// (device capacity, its own bundle and container, the file browser) is real.
+///
+/// Each non-Apple row carries `bundleID`, which is what `AppIconLoader` uses to show the real
+/// icon: the icon of the app installed on this device (installed-apps mode), a hand-cut PNG
+/// from `Resources/AppIcons`, or the official App Store artwork. Photos, this app's own entry
+/// and the fictional ones have no store page and keep the gradient placeholder.
 enum DemoCatalog {
     private static let gb: Double = 1_000_000_000
 
@@ -33,6 +38,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "telegram",
+            bundleID: "ph.telegra.Telegraph",
             name: "Telegram",
             developer: "Telegram FZ-LLC",
             version: "13.1.2",
@@ -45,6 +51,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "tiktok",
+            bundleID: "com.zhiliaoapp.musically",
             name: "TikTok",
             developer: "TikTok Pte. Ltd.",
             version: "37.2.0",
@@ -57,6 +64,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "whatsapp",
+            bundleID: "net.whatsapp.WhatsApp",
             name: "WhatsApp",
             developer: "Meta Platforms",
             version: "25.9.1",
@@ -69,6 +77,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "youtube",
+            bundleID: "com.google.ios.youtube",
             name: "YouTube",
             developer: "Google LLC",
             version: "20.41.4",
@@ -81,6 +90,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "clash",
+            bundleID: "com.supercell.magic",
             name: "Clash of Clans",
             developer: "Supercell",
             version: "17.120.3",
@@ -93,6 +103,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "google",
+            bundleID: "com.google.GoogleMobile",
             name: "Google",
             developer: "Google LLC",
             version: "368.0",
@@ -117,6 +128,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "spotify",
+            bundleID: "com.spotify.client",
             name: "Spotify",
             developer: "Spotify AB",
             version: "9.0.62",
@@ -129,6 +141,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "instagram",
+            bundleID: "com.burbn.instagram",
             name: "Instagram",
             developer: "Meta Platforms",
             version: "364.0",
@@ -141,6 +154,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "netflix",
+            bundleID: "com.netflix.Netflix",
             name: "Netflix",
             developer: "Netflix, Inc.",
             version: "17.4.0",
@@ -153,6 +167,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "discord",
+            bundleID: "com.hammerandchisel.discord",
             name: "Discord",
             developer: "Discord Inc.",
             version: "260.0",
@@ -165,6 +180,7 @@ enum DemoCatalog {
         ),
         AppItem(
             id: "minecraft",
+            bundleID: "com.mojang.minecraftpe",
             name: "Minecraft",
             developer: "Mojang",
             version: "1.21.60",

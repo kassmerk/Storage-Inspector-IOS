@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage Inspector — превью интерфейса</title>
+<style>
+  :root{
+    --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E;
+    --sep:rgba(255,255,255,.08);
+    --accent:#8B87FF; --indigo:#5E5CE6;
+    --sec:#9A9A9F; --tert:#6E6E73;
+    --blue:#0A84FF; --pink:#FF6482; --orange:#FF9F0A; --free:#4D4D4D;
+  }
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{
+    margin:0; background:#0b0b0d; color:#fff;
+    font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:28px 16px 60px;
+  }
+  .page-head{max-width:900px;margin:0 auto 26px;text-align:center}
+  .page-head h1{font-size:20px;font-weight:700;margin:0 0 6px}
+  .page-head p{font-size:13px;color:#8a8a90;margin:0;line-height:1.5}
+  .stage{display:flex;gap:44px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+  figure{margin:0}
+  figcaption{text-align:center;font-size:12px;color:#7c7c82;margin-top:12px}
+
+  /* ---- iPhone frame ---- */
+  .phone{
+    width:390px;height:800px;background:var(--bg);
+    border-radius:46px;border:9px solid #17171a;
+    box-shadow:0 0 0 1px #2a2a2e, 0 26px 60px rgba(0,0,0,.7);
+    overflow:hidden;position:relative;
+  }
+  .screen{height:100%;display:flex;flex-direction:column;background:var(--bg)}
+  .scroll{flex:1;overflow-y:auto;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+
+  /* ---- typography ---- */
+  .t-title{font-size:34px;font-weight:700;line-height:1.15}
+  .t-sub{font-size:14px;color:var(--sec);margin-top:4px}
+  .t-h22{font-size:22px;font-weight:700}
+  .t-17{font-size:17px}
+  .t-17s{font-size:17px;font-weight:600}
+  .t-16{font-size:16px}
+  .t-15{font-size:15px}
+  .t-13{font-size:13px}
+  .t-12{font-size:12px}
+  .sec{color:var(--sec)}
+  .tert{color:var(--tert)}
+  .mono{font-variant-numeric:tabular-nums}
+
+  /* ---- cards / layout ---- */
+  .card{background:var(--card);border-radius:26px}
+  .pad18{padding:18px}
+  .pad16{padding:16px}
+  .pad20{padding:20px}
+  .stack-16{display:flex;flex-direction:column;gap:16px}
+  .stack-14{display:flex;flex-direction:column;gap:14px}
+  .stack-12{display:flex;flex-direction:column;gap:12px}
+  .screen-head{padding:12px 20px 0}
+  .hpad{padding-left:16px;padding-right:16px}
+
+  /* ---- icon tile ---- */
+  .tile{
+    width:52px;height:52px;border-radius:13.5px;flex:0 0 auto;
+    display:grid;place-items:center;font-size:23px;line-height:1;
+    color:#fff;font-weight:600;
+    box-shadow:inset 0 0 0 .8px rgba(255,255,255,.12);
+  }
+</style>
+</head>
+<body>
+<div class="page-head">
+  <h1>Storage Inspector — как будет выглядеть</h1>
+  <p>HTML-макет, собранный по реальному коду SwiftUI (Theme.swift, StorageSummaryCard,
+     AppRowView, SettingsView). Настоящие скриншоты появятся только после сборки .ipa.</p>
+</div>
+<main class="stage">
+<style>
+  /* ---- storage summary card ---- */
+  .sum-top{display:flex;align-items:flex-start;gap:12px}
+  .sum-title{font-size:20px;font-weight:600}
+  .sum-used{font-size:13px;color:var(--sec);margin-top:4px}
+  .sum-right{text-align:right;margin-left:auto}
+  .sum-free{font-size:16px;font-weight:600;color:var(--accent)}
+  .sum-free-cap{font-size:12px;color:var(--tert);margin-top:4px}
+  .bar{height:14px;display:flex;gap:2px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,.06)}
+  .bar span{display:block;border-radius:4px;height:100%}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .legend .lg{display:flex;align-items:center;gap:7px;min-width:0}
+  .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .legend .name{font-size:13px;color:var(--sec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .legend .val{font-size:13px;font-weight:500;margin-left:auto;white-space:nowrap}
+
+  /* ---- rows ---- */
+  .row{display:flex;align-items:center;gap:14px;padding:11px 16px}
+  .row .main{min-width:0;flex:1}
+  .row .name{font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .meta{font-size:13px;color:var(--sec);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .size{font-size:16px;color:var(--sec);white-space:nowrap}
+  .chev{color:var(--tert);font-size:13px;font-weight:600;flex:0 0 auto}
+  .sep{height:.7px;background:var(--sep);margin-left:82px}
+  .sep0{height:.7px;background:var(--sep)}
+  .apps-card{background:var(--card);border-radius:26px;padding:6px 0;margin:0 16px}
+
+  /* ---- "This app" card ---- */
+  .thisapp{display:flex;flex-direction:column;gap:14px;background:var(--card);border-radius:26px;padding:16px}
+  .inner-row{display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:16px;padding:13px 14px}
+  .inner-row .txt{font-size:16px;font-weight:600}
+  .folder{color:var(--accent);font-size:16px;font-weight:600}
+
+  /* ---- applications header ---- */
+  .apps-head{display:flex;align-items:center;gap:10px;padding:4px 20px 0}
+  .pill{font-size:13px;font-weight:600;color:var(--sec);background:var(--card2);border-radius:999px;padding:3px 8px}
+  .sort{margin-left:auto;color:var(--blue);font-size:17px;display:flex;align-items:center;gap:5px}
+
+  /* ---- bottom bar ---- */
+  .bottom{background:var(--bg);padding:8px 16px 4px}
+  .search{display:flex;align-items:center;gap:8px;background:var(--card);
+    border:1px solid rgba(255,255,255,.06);border-radius:999px;padding:13px 14px;font-size:17px;color:var(--sec)}
+  .tabbar-wrap{display:flex;justify-content:center;padding:8px 0 2px;background:var(--bg)}
+  .tabbar{display:flex;gap:4px;padding:6px;background:#242424;
+    border:1px solid rgba(255,255,255,.08);border-radius:999px}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:9px 22px;border-radius:22px;color:#fff}
+  .tab .ico{font-size:20px;line-height:1}
+  .tab .lbl{font-size:10px;font-weight:600}
+  .tab.on{color:var(--accent);background:rgba(139,135,255,.16)}
+</style>
+
+<figure>
+  <div class="phone">
+    <div class="screen">
+      <div class="scroll">
+
+        <!-- header -->
+        <div class="screen-head">
+          <div class="t-title">Storage</div>
+          <div class="t-sub">Device capacity and app sizes</div>
+        </div>
+
+        <div class="stack-16" style="padding:16px 0 20px">
+
+          <!-- summary card -->
+          <div class="card pad18 stack-16" style="margin:0 16px">
+            <div class="sum-top">
+              <div>
+                <div class="sum-title">iPhone Storage</div>
+                <div class="sum-used">143.4 GB of 256 GB used</div>
+              </div>
+              <div class="sum-right">
+                <div class="sum-free mono">112.6 GB</div>
+                <div class="sum-free-cap">available</div>
+              </div>
+            </div>
+            <div class="bar">
+              <span style="width:30.6%;background:var(--accent)"></span>
+              <span style="width:15.2%;background:var(--pink)"></span>
+              <span style="width:10.2%;background:var(--orange)"></span>
+              <span style="width:44%;background:var(--free)"></span>
+            </div>
+            <div class="legend">
+              <div class="lg"><i class="dot" style="background:var(--accent)"></i><span class="name">Applications</span><span class="val mono">78.4 GB</span></div>
+              <div class="lg"><i class="dot" style="background:var(--pink)"></i><span class="name">Media</span><span class="val mono">39 GB</span></div>
+              <div class="lg"><i class="dot" style="background:var(--orange)"></i><span class="name">System Data</span><span class="val mono">26 GB</span></div>
+              <div class="lg"><i class="dot" style="background:var(--free)"></i><span class="name">Available</span><span class="val mono">112.6 GB</span></div>
+            </div>
+          </div>
+
+          <!-- this app card -->
+          <div class="thisapp" style="margin:0 16px">
+            <div style="display:flex;align-items:center;gap:14px">
+              <div class="tile" style="background:linear-gradient(135deg,#8B87FF,#5E5CE6)">◧</div>
+              <div style="flex:1;min-width:0">
+                <div class="t-17s">This app</div>
+                <div class="t-13 sec" style="margin-top:3px">Measured on this device</div>
+              </div>
+              <div class="t-16 sec mono">24.8 MB</div>
+            </div>
+            <div class="inner-row">
+              <span class="folder">▤</span>
+              <span class="txt">View Files</span>
+              <span class="chev" style="margin-left:auto">›</span>
+            </div>
+          </div>
+
+          <!-- applications header -->
+          <div class="apps-head">
+            <span class="t-h22">Applications</span>
+            <span class="pill">14</span>
+            <span class="sort">Size ⌃⌄</span>
+          </div>
+          <!-- applications list -->
+          <div class="apps-card">
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#FFB800,#FF375F 55%,#1E6BF1)">▣</div><div class="main"><div class="name">Photos</div><div class="meta">Last used: Today</div></div><div class="size mono">16.16 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#8B87FF,#5E5CE6)">✎</div><div class="main"><div class="name">Feather</div><div class="meta">Last used: Today</div></div><div class="size mono">9.44 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#2AABEE,#229ED9)">➤</div><div class="main"><div class="name">Telegram</div><div class="meta">Last used: Today</div></div><div class="size mono">9.19 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#25F4EE,#161616 55%,#FE2C55)">♫</div><div class="main"><div class="name">TikTok</div><div class="meta">Last used: Today</div></div><div class="size mono">8.91 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#25D366,#128C7E)">✆</div><div class="main"><div class="name">WhatsApp</div><div class="meta">Last used: 11/10/26</div></div><div class="size mono">7.21 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#FF0000,#C10000)">▶</div><div class="main"><div class="name">YouTube</div><div class="meta">Last used: Today</div></div><div class="size mono">3.06 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#FFB627,#C77800)">♛</div><div class="main"><div class="name">Clash of Clans</div><div class="meta">Last used: Today</div></div><div class="size mono">3.03 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#4285F4,#EA4335)">G</div><div class="main"><div class="name">Google</div><div class="meta">Last used: Today</div></div><div class="size mono">2.88 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#7C4DFF,#311B92)">⛨</div><div class="main"><div class="name">NC v18.600.7</div><div class="meta">Last used: Today</div></div><div class="size mono">2.78 GB</div><div class="chev">›</div></div>
+            <div class="sep"></div>
+            <div class="row"><div class="tile" style="background:linear-gradient(135deg,#1DB954,#14833B)">≈</div><div class="main"><div class="name">Spotify</div><div class="meta">Last used: Today</div></div><div class="size mono">2.31 GB</div><div class="chev">›</div></div>
+          </div>
+
+          <div class="t-12 tert" style="text-align:center;padding:0 24px;line-height:1.4">
+            iOS does not allow one app to read the storage used by other apps, so the list above
+            is a demo dataset. Device capacity, this app's own sizes and the file browser are
+            measured for real. Icons are the real ones: the icon of the app installed on this
+            device (private API mode), a PNG bundled in the app, or the official App Store artwork
+            fetched by bundle id and cached.
+          </div>
+        </div>
+      </div>
+
+      <!-- search + floating tab bar -->
+      <div class="bottom">
+        <div class="search"><span>⌕</span><span>Applications</span></div>
+      </div>
+      <div class="tabbar-wrap">
+        <div class="tabbar">
+          <div class="tab on"><span class="ico">▤</span><span class="lbl">Storage</span></div>
+          <div class="tab"><span class="ico">⚙</span><span class="lbl">Settings</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption>Экран Storage</figcaption>
+</figure>
+<style>
+  .heart{font-size:34px;color:var(--pink);text-align:center;line-height:1}
+  .support-title{font-size:26px;font-weight:700;text-align:center;line-height:1.2}
+  .feature{display:flex;align-items:flex-start;gap:14px}
+  .feature .fico{width:30px;flex:0 0 30px;font-size:20px;color:var(--accent);line-height:1.1}
+  .feature .ft{font-size:17px;font-weight:600}
+  .feature .fs{font-size:15px;color:var(--sec);margin-top:3px;line-height:1.35}
+  .btn-primary{background:var(--accent);border-radius:20px;padding:16px;text-align:center;font-size:17px;font-weight:600}
+  .pref-row{display:flex;align-items:center;gap:12px;padding:10px 0}
+  .pref-row .pico{width:26px;flex:0 0 26px;font-size:16px;color:var(--accent)}
+  .pref-row .pt{font-size:17px}
+  .pref-row .pv{margin-left:auto;font-size:16px;color:var(--sec)}
+  .switch{width:51px;height:31px;border-radius:999px;background:var(--accent);position:relative;flex:0 0 auto}
+  .switch::after{content:"";position:absolute;top:2px;right:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .action-row{display:flex;align-items:center;gap:14px;padding:13px 0;font-size:17px}
+  .action-row .aico{width:26px;flex:0 0 26px;font-size:16px}
+  /* App Icon card */
+  .icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .icon-tile{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .icon-swatch{width:56px;height:56px;border-radius:13px;position:relative;box-shadow:0 3px 10px rgba(0,0,0,.45)}
+  .icon-swatch.selected{outline:2.4px solid var(--accent);outline-offset:2px}
+  .icon-swatch .roof{position:absolute;left:26%;top:29%;width:48%;height:19%;background:#fff;clip-path:polygon(17% 0,83% 0,100% 100%,0 100%)}
+  .icon-swatch .cap{position:absolute;left:26%;top:49%;width:48%;height:19%;background:#fff;border-radius:999px}
+  .icon-swatch .hole{position:absolute;left:60%;top:54%;width:9%;height:9%;border-radius:50%;background:var(--hole)}
+  .icon-swatch .badge{position:absolute;right:-6px;bottom:-6px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;line-height:18px;text-align:center;border:2px solid #000}
+  .icon-name{font-size:12px;color:var(--sec)}
+  .icon-name.sel{color:#fff;font-weight:600}
+</style>
+
+<figure>
+  <div class="phone">
+    <div class="screen">
+      <div class="scroll">
+        <div class="screen-head"><div class="t-title">Settings</div></div>
+
+        <div class="stack-16 hpad" style="padding-top:16px;padding-bottom:20px">
+
+          <!-- support card -->
+          <div class="card pad20 stack-14">
+            <div class="heart">♥</div>
+            <div class="support-title">Support Storage Inspector</div>
+            <div class="stack-16" style="padding-top:4px">
+              <div class="feature">
+                <span class="fico">✦</span>
+                <div>
+                  <div class="ft">Tell your friends</div>
+                  <div class="fs">Share the app with someone who keeps running out of space.</div>
+                </div>
+              </div>
+              <div class="feature">
+                <span class="fico">✓</span>
+                <div>
+                  <div class="ft">No ads, no tracking</div>
+                  <div class="fs">Everything is measured on device. Nothing is uploaded anywhere.</div>
+                </div>
+              </div>
+              <div class="feature">
+                <span class="fico">🐞</span>
+                <div>
+                  <div class="ft">Report a bug</div>
+                  <div class="fs">Found something broken? A short message is enough to get it fixed.</div>
+                </div>
+              </div>
+            </div>
+            <div class="btn-primary" style="margin-top:4px">Share App</div>
+          </div>
+
+          <!-- preferences card -->
+          <div class="card pad16">
+            <div class="pref-row">
+              <span class="pico">▤</span>
+              <span class="pt">Demo applications</span>
+              <span class="switch"></span>
+            </div>
+            <div class="sep0"></div>
+            <div class="pref-row" style="padding:6px 0">
+              <span class="pico">⇔</span>
+              <span class="pt">Size unit</span>
+              <span class="pv">Automatic ›</span>
+            </div>
+            <div class="sep0"></div>
+            <div class="action-row"><span class="aico" style="color:var(--blue)">↻</span><span>Refresh measurements</span></div>
+            <div class="sep0"></div>
+            <div class="action-row"><span class="aico" style="color:var(--blue)">↺</span><span>Restore demo list</span></div>
+          </div>
+
+          <!-- app icon card -->
+          <div class="card pad16">
+            <div class="pref-row" style="padding-bottom:0">
+              <span class="pico" style="color:var(--accent)">◈</span>
+              <span class="pt">App Icon</span>
+              <span class="pv">Orange</span>
+            </div>
+            <div class="icon-grid">
+              <div class="icon-tile">
+                <div class="icon-swatch selected" style="background:linear-gradient(135deg,#FFA320,#FF4A00);--hole:#fb6110">
+                  <span class="roof"></span><span class="cap"></span><span class="hole"></span>
+                  <span class="badge">✓</span>
+                </div>
+                <span class="icon-name sel">Orange</span>
+              </div>
+              <div class="icon-tile">
+                <div class="icon-swatch" style="background:linear-gradient(135deg,#7C79F2,#5B57E0);--hole:#6a67e9">
+                  <span class="roof"></span><span class="cap"></span><span class="hole"></span>
+                </div>
+                <span class="icon-name">Indigo</span>
+              </div>
+              <div class="icon-tile">
+                <div class="icon-swatch" style="background:linear-gradient(135deg,#2E2E31,#0A0A0C);--hole:#1c1c1e">
+                  <span class="roof"></span><span class="cap"></span><span class="hole"></span>
+                </div>
+                <span class="icon-name">Graphite</span>
+              </div>
+              <div class="icon-tile">
+                <div class="icon-swatch" style="background:linear-gradient(135deg,#AE0016,#140608);--hole:#5f0311">
+                  <span class="roof"></span><span class="cap"></span><span class="hole"></span>
+                </div>
+                <span class="icon-name">Crimson</span>
+              </div>
+            </div>
+            <div class="t-12 tert" style="margin-top:12px;line-height:1.4">
+              iOS shows a short system alert when the icon changes. Home Screen and App Switcher update right away.
+            </div>
+          </div>
+
+          <!-- about card -->
+          <div class="card pad16">
+            <div class="action-row" style="padding:13px 0">
+              <span class="aico" style="color:var(--accent)">ⓘ</span><span>About Storage Inspector</span>
+              <span class="chev" style="margin-left:auto">›</span>
+            </div>
+            <div class="sep0"></div>
+            <div class="action-row" style="padding:13px 0">
+              <span class="aico" style="color:var(--blue)">➤</span><span>Send Feedback</span>
+              <span class="chev" style="margin-left:auto">›</span>
+            </div>
+            <div class="sep0"></div>
+            <div class="action-row" style="padding:13px 0">
+              <span class="aico" style="color:var(--sec)">#</span><span>Version</span>
+              <span style="margin-left:auto;font-size:16px;color:var(--sec)">1.0 (1)</span>
+            </div>
+          </div>
+
+          <div class="t-12 tert" style="text-align:center;line-height:1.4;padding:0 8px">
+            Device capacity and this app's own sizes are read from the file system. Sizes of other
+            apps are a demo dataset, because iOS keeps them private.
+          </div>
+        </div>
+      </div>
+
+      <div class="tabbar-wrap">
+        <div class="tabbar">
+          <div class="tab"><span class="ico">▤</span><span class="lbl">Storage</span></div>
+          <div class="tab on"><span class="ico">⚙</span><span class="lbl">Settings</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption>Экран Settings</figcaption>
+</figure>
+</main>
+</body>
+</html>

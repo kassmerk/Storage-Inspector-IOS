@@ -5,7 +5,12 @@ extension StorageView {
     var thisAppCard: some View {
         VStack(spacing: 14) {
             HStack(spacing: 14) {
-                AppIconView(symbol: store.selfApp.symbol, tint: store.selfApp.tint, size: 52)
+                AppIconView(
+                    symbol: store.selfApp.symbol,
+                    tint: store.selfApp.tint,
+                    size: 52,
+                    artwork: iconLoader.image(for: store.selfApp)
+                )
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("This app")
@@ -51,7 +56,7 @@ extension StorageView {
 
     var applicationsHeader: some View {
         HStack(spacing: 10) {
-            Text("Applications")
+            Text(useInstalledApps ? "Installed" : "Applications")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(.white)
 
@@ -64,18 +69,25 @@ extension StorageView {
 
             Spacer()
 
-            Button {
-                sortMode = sortMode == .size ? .name : .size
-            } label: {
-                HStack(spacing: 5) {
-                    Text(sortMode.title)
-                    Image(systemName: "arrow.up.arrow.down")
-                        .font(.system(size: 13, weight: .semibold))
+            if useInstalledApps {
+                if case .loading = store.installedState {
+                    ProgressView()
+                        .tint(Theme.secondaryLabel)
                 }
-                .font(.system(size: 17))
-                .foregroundStyle(Theme.blue)
+            } else {
+                Button {
+                    sortMode = sortMode == .size ? .name : .size
+                } label: {
+                    HStack(spacing: 5) {
+                        Text(sortMode.title)
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .font(.system(size: 17))
+                    .foregroundStyle(Theme.blue)
+                }
+                .buttonStyle(PressableCardStyle())
             }
-            .buttonStyle(PressableCardStyle())
         }
     }
 
@@ -83,7 +95,7 @@ extension StorageView {
         VStack(spacing: 0) {
             ForEach(Array(visibleApps.enumerated()), id: \.element.id) { index, app in
                 NavigationLink(value: StorageRoute.app(app)) {
-                    AppRowView(app: app, unit: unit)
+                    AppRowView(app: app, unit: unit, artwork: iconLoader.image(for: app))
                 }
                 .buttonStyle(PressableCardStyle())
 
@@ -100,14 +112,48 @@ extension StorageView {
         .padding(.horizontal, 16)
     }
 
+    @ViewBuilder
     var emptySearchCard: some View {
-        EmptyStateCard(
-            symbol: "magnifyingglass",
-            title: "No applications found",
-            message: search.isEmpty
-                ? "Demo data is turned off. Enable it in Settings to see the sample list."
-                : "Nothing matches “\(search)”."
-        )
+        if !search.isEmpty {
+            EmptyStateCard(
+                symbol: "magnifyingglass",
+                title: "No applications found",
+                message: "Nothing matches “\(search)”."
+            )
+        } else if useInstalledApps {
+            switch store.installedState {
+            case .idle, .loading:
+                EmptyStateCard(
+                    symbol: "hourglass",
+                    title: "Reading installed apps",
+                    message: "Asking iOS for the apps on this iPhone and for their icons. This takes a second."
+                )
+            case .unavailable(let reason):
+                EmptyStateCard(
+                    symbol: "exclamationmark.triangle",
+                    title: "Installed apps unavailable",
+                    message: reason + " Turn the switch off in Settings to go back to the demo list."
+                )
+            case .empty:
+                EmptyStateCard(
+                    symbol: "square.grid.2x2",
+                    title: "No apps found",
+                    message: "iOS returned an empty list through the private API. Turn the switch off in Settings to go back to the demo list."
+                )
+            case .ready:
+                EmptyStateCard(
+                    symbol: "magnifyingglass",
+                    title: "No applications found",
+                    message: "Nothing matches the current filter."
+                )
+            }
+        } else {
+            EmptyStateCard(
+                symbol: "square.stack.3d.up",
+                title: "Demo list is hidden",
+                message: "Demo data is turned off. Enable it in Settings, or switch on “Installed apps” to see what is really on this iPhone."
+            )
+        }
     }
 
     var searchBar: some View {
@@ -119,10 +165,17 @@ extension StorageView {
     }
 
     var footnote: some View {
-        Text("iOS does not allow one app to read the storage used by other apps, so the list above is a demo dataset. Device capacity, this app's own sizes and the file browser are measured for real.")
+        Text(footnoteText)
             .font(.system(size: 12))
             .foregroundStyle(Theme.tertiaryLabel)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
+    }
+
+    var footnoteText: String {
+        if useInstalledApps {
+            return "The list and the icons come from iOS itself: this build reads the installed apps through the private LSApplicationWorkspace API, which only works in a sideloaded app. The sizes stay a dash because iOS never reveals how much space another app takes. Device capacity, this app's own sizes and the file browser are measured for real."
+        }
+        return "iOS does not allow one app to read the storage used by other apps, so the sizes above are a demo dataset. The icons are the real ones: the icon of the app installed on this device, a bundled PNG, or the official App Store artwork. Device capacity, this app's own sizes and the file browser are measured for real."
     }
 }

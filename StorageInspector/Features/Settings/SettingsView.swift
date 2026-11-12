@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject var store: StorageStore
     @AppStorage(SettingsKeys.sizeUnit) var unitRaw: String = SizeUnit.automatic.rawValue
     @AppStorage(SettingsKeys.showDemoApps) var showDemoApps: Bool = true
+    @AppStorage(SettingsKeys.useInstalledApps) var useInstalledApps: Bool = false
 
     @State var showAbout = false
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Left aligned big title, like the "Settings" header in iOS.
 struct ScreenTitle: View {
@@ -30,30 +31,37 @@ struct PressableCardStyle: ButtonStyle {
     }
 }
 
-/// Rounded gradient tile standing in for a real app icon (SF Symbol + tint).
+/// Rounded icon tile: the resolved picture when `AppIconLoader` has one (icon of the installed
+/// app, a bundled PNG or the App Store artwork), otherwise a gradient stand-in with an SF Symbol.
 struct AppIconView: View {
     let symbol: String
     let tint: [Color]
     var size: CGFloat = 52
     var cornerRadius: CGFloat? = nil
+    /// Resolved picture; `nil` keeps the placeholder.
+    var artwork: UIImage? = nil
 
     private var radius: CGFloat { cornerRadius ?? size * 0.26 }
 
     var body: some View {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .fill(
+        ZStack {
+            if let artwork = artwork {
+                Image(uiImage: artwork)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
                 LinearGradient(colors: tint, startPoint: .topLeading, endPoint: .bottomTrailing)
-            )
-            .frame(width: size, height: size)
-            .overlay(
                 Image(systemName: symbol)
                     .font(.system(size: size * 0.44, weight: .semibold))
                     .foregroundStyle(.white)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(Color.white.opacity(0.12), lineWidth: 0.8)
-            )
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .stroke(Color.white.opacity(0.12), lineWidth: 0.8)
+        )
     }
 }
 

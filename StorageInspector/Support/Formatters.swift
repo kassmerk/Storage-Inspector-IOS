@@ -29,6 +29,8 @@ enum SizeUnit: String, CaseIterable, Identifiable {
 enum SettingsKeys {
     static let sizeUnit = "storageInspector.sizeUnit"
     static let showDemoApps = "storageInspector.showDemoApps"
+    /// Turns the list into the apps really installed on this iPhone (private API).
+    static let useInstalledApps = "storageInspector.useInstalledApps"
 }
 
 enum Formatters {
@@ -62,6 +64,11 @@ enum Formatters {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd.MM.yy HH:mm"
         return formatter.string(from: value)
+    }
+
+    /// A size, or an em dash when iOS keeps it private (every app except this one).
+    static func size(_ value: Int64, known: Bool, unit: SizeUnit = .automatic) -> String {
+        known ? bytes(value, unit: unit) : "—"
     }
 
     /// "1.0 (1)" — short version plus build number.

@@ -34,12 +34,24 @@ extension SettingsView {
     }
 
     var footnote: some View {
-        Text("Device capacity and this app's own sizes are read from the file system. Sizes of other apps are a demo dataset, because iOS keeps them private.")
+        Text("Device capacity and this app's own sizes are read from the file system. Sizes of other apps are a demo dataset (or a dash in installed-apps mode), because iOS keeps them private.")
             .font(.system(size: 12))
             .foregroundStyle(Theme.tertiaryLabel)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .padding(.top, 4)
+    }
+
+    /// Small grey explanation under a switch, aligned with the row title.
+    func noteText(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12))
+            .foregroundStyle(Theme.tertiaryLabel)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 38)
+            .padding(.bottom, 8)
     }
 
     func featureRow(_ symbol: String, tint: Color, title: String, subtitle: String) -> some View {
