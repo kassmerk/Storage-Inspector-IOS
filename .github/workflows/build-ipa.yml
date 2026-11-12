@@ -23,7 +23,7 @@ permissions:
 jobs:
   ipa:
     name: xcodebuild -> StorageInspector.ipa
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 40
     env:
       BUNDLE_ID: ${{ github.event.inputs.bundle_id || 'com.example.storageinspector' }}
