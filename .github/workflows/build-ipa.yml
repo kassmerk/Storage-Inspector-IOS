@@ -12,6 +12,10 @@ on:
         description: "Имя файла .ipa (без расширения)"
         required: false
         default: StorageInspector
+      runner:
+        description: "Образ macOS-раннера. ПУСТО = macos-latest (или переменная MACOS_RUNNER). Другой вариант: macos-15-intel"
+        required: false
+        default: ""
   push:
     branches:
       - main
@@ -20,10 +24,26 @@ on:
 permissions:
   contents: read
 
+# Пуш за пушем не должны занимать очередь раннеров: новый запуск отменяет предыдущий.
+concurrency:
+  group: build-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ipa:
     name: xcodebuild -> StorageInspector.ipa
-    runs-on: macos-15-intel
+    # macos-latest — всегда существующий образ GitHub (xcodebuild + Xcode последней версии).
+    # Явные образы вроде macos-14 периодически выводятся из эксплуатации и падают
+    # с ошибкой "The configuration ... is not supported".
+    #
+    # Если сборка падает с "The job was not acquired by Runner of type hosted" — это нехватка
+    # раннеров на стороне GitHub, а не ошибка проекта: запустите Re-run jobs или выберите
+    # другой образ (Run workflow → runner, либо переменная репозитория MACOS_RUNNER:
+    # Settings → Secrets and variables → Actions → Variables). У *-intel образов отдельный
+    # пул машин, поэтому они часто доступны, когда arm64-очередь забита.
+    # Поле runner в Run workflow по умолчанию пустое — тогда работает цепочка ниже
+    # (переменная MACOS_RUNNER → macos-latest); впишите macos-15-intel, чтобы уйти на Intel-пул.
+    runs-on: ${{ github.event.inputs.runner || vars.MACOS_RUNNER || 'macos-latest' }}
     timeout-minutes: 40
     env:
       BUNDLE_ID: ${{ github.event.inputs.bundle_id || 'com.example.storageinspector' }}
@@ -32,6 +52,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Normalize line endings
+        run: |
+          # Files are edited on Windows: CRLF makes bash die on the first line of a script,
+          # so strip the carriage returns before anything is executed.
+          find . -type f \( -name '*.sh' -o -name '*.swift' -o -name '*.pbxproj' \) -print0 \
+            | xargs -0 perl -pi -e 's/\r\n/\n/g'
+          chmod +x tools/build-ipa.sh
 
       - name: Show toolchain
         run: |
@@ -100,6 +128,48 @@ jobs:
           else
             echo "AppIcon-1024.png not found; the icon stays inside Assets.car"
           fi
+          echo "--- Alternate icons for Settings -> App Icon ---"
+          VARIANT_DIR=""
+          for candidate in ./StorageInspector/Resources/AppIconVariants ./Resources/AppIconVariants; do
+            if [ -d "$candidate" ]; then
+              VARIANT_DIR="$candidate"
+              break
+            fi
+          done
+          if [ -n "$VARIANT_DIR" ]; then
+            ALT_KEYS=""
+            for entry in "IconIndigo:icon-indigo" "IconGraphite:icon-graphite" "IconCrimson:icon-crimson"; do
+              KEY=${entry%%:*}
+              FILE=${entry##*:}
+              SRC="$VARIANT_DIR/$FILE.png"
+              if [ ! -f "$SRC" ]; then
+                echo "warning: $SRC is missing - the $KEY icon is skipped"
+                continue
+              fi
+              sips -z 120 120 "$SRC" --out "$APP/$KEY@2x.png" >/dev/null
+              sips -z 180 180 "$SRC" --out "$APP/$KEY@3x.png" >/dev/null
+              ALT_KEYS="$ALT_KEYS $KEY"
+            done
+            if [ -n "$ALT_KEYS" ]; then
+              # `CFBundleAlternateIcons` is nested inside `CFBundleIcons`, and its keys have to be
+              # the names passed to `UIApplication.setAlternateIconName(_:)` (`IconIndigo`).
+              /usr/libexec/PlistBuddy -c "Delete :CFBundleIcons:CFBundleAlternateIcons" "$APP/Info.plist" >/dev/null 2>&1 || true
+              if ! /usr/libexec/PlistBuddy -c "Print :CFBundleIcons" "$APP/Info.plist" >/dev/null 2>&1; then
+                /usr/libexec/PlistBuddy -c "Add :CFBundleIcons dict" "$APP/Info.plist"
+              fi
+              /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons dict" "$APP/Info.plist"
+              for KEY in $ALT_KEYS; do
+                /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons:$KEY dict" "$APP/Info.plist"
+                /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons:$KEY:CFBundleIconFiles array" "$APP/Info.plist"
+                /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons:$KEY:CFBundleIconFiles:0 string $KEY" "$APP/Info.plist"
+              done
+              echo "Alternate icons:$ALT_KEYS (orange stays the primary icon)"
+              /usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundleAlternateIcons" "$APP/Info.plist" | head -n 20
+            fi
+          else
+            echo "AppIconVariants folder not found - only the primary icon is available"
+          fi
+
           /usr/libexec/PlistBuddy -c "Add :LSRequiresIPhoneOS bool true" "$APP/Info.plist" >/dev/null 2>&1 || true
 
           echo "--- Remove stale signatures (Feather signs everything itself) ---"
