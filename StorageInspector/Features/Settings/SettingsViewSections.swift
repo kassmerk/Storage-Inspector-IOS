@@ -145,6 +145,15 @@ extension SettingsView {
         if !InstalledAppsProvider.iconsAvailable {
             text += " This iOS build does not expose the private icon lookup, so the tiles fall back to the App Store artwork."
         }
+
+        switch store.installedState {
+        case .ready:
+            text += " The last scan found \(store.installedApps.count) apps."
+        case .empty:
+            text += " The last scan found no apps at all."
+        case .idle, .loading, .unavailable:
+            break
+        }
         return text
     }
 }

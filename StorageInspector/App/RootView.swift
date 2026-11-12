@@ -29,16 +29,25 @@ struct RootView: View {
         ZStack {
             Theme.background.ignoresSafeArea()
 
-            switch tab {
-            case .storage:
-                StorageView()
-            case .settings:
-                SettingsView()
+            // The two screens are swapped without any horizontal movement. A plain `switch`
+            // inside an animation makes SwiftUI pick the navigation push transition for the
+            // incoming `NavigationStack`, so the whole screen used to slide in from the edge and
+            // looked like the interface drifting sideways while a finger was still down.
+            Group {
+                switch tab {
+                case .storage:
+                    StorageView()
+                case .settings:
+                    SettingsView()
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .transition(.opacity)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             FloatingTabBar(selection: $tab)
         }
+        .animation(.easeInOut(duration: 0.18), value: tab)
     }
 }
 
@@ -52,9 +61,9 @@ struct FloatingTabBar: View {
                 Button {
                     guard selection != item else { return }
                     UISelectionFeedbackGenerator().selectionChanged()
-                    withAnimation(.easeOut(duration: 0.18)) {
-                        selection = item
-                    }
+                    // The cross-fade is declared once in `RootView`; an extra animation scope here
+                    // made the two screens animate twice.
+                    selection = item
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: item.icon)

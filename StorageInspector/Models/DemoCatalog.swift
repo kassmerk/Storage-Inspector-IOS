@@ -6,14 +6,16 @@ import SwiftUI
 ///
 /// Each non-Apple row carries `bundleID`, which is what `AppIconLoader` uses to show the real
 /// icon: the icon of the app installed on this device (installed-apps mode), a hand-cut PNG
-/// from `Resources/AppIcons`, or the official App Store artwork. Photos, this app's own entry
-/// and the fictional ones have no store page and keep the gradient placeholder.
+/// from `Resources/AppIcons`, or the official App Store artwork. Photos has no App Store page, but
+/// it is a real system app, so its `com.apple.mobileslideshow` bundle id lets iOS hand out the
+/// Home Screen icon. This app's own entry and the fictional ones keep the gradient placeholder.
 enum DemoCatalog {
     private static let gb: Double = 1_000_000_000
 
     static let apps: [AppItem] = [
         AppItem(
             id: "photos",
+            bundleID: "com.apple.mobileslideshow",
             name: "Photos",
             developer: "Apple",
             version: "9.0",

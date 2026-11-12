@@ -103,7 +103,12 @@ struct StorageView: View {
         .onAppear { reload() }
         .onChange(of: useInstalledApps) { _ in reload() }
         .onChange(of: showDemoApps) { _ in loadIcons() }
-        .onChange(of: store.installedApps) { _ in loadIcons() }
+        .onChange(of: store.installedApps) { _ in
+            // The installed list arrives after the first pass, and only then can the real Home
+            // Screen icons be read. Forgetting the marks makes the next pass resolve once more.
+            iconLoader.forget()
+            loadIcons()
+        }
     }
 
     /// Re-reads the numbers, the installed apps (when that mode is on) and the icons.

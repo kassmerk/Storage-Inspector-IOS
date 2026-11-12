@@ -56,8 +56,8 @@ workflows:
           APP="build/ipa/Payload/StorageInspector.app"
           test -d "$APP"
           /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
-          echo "--- Alternate icons ---"
-          /usr/libexec/PlistBuddy -c "Print :CFBundleAlternateIcons" "$APP/Info.plist" || echo "no alternate icons"
+          echo "--- Alternate icons (nested under CFBundleIcons) ---"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundleAlternateIcons" "$APP/Info.plist" || echo "no alternate icons"
           echo "--- Icon files ---"
           ls -1 "$APP" | grep -E '^(AppIcon|Icon)' || true
     artifacts:
