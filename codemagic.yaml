@@ -1,0 +1,36 @@
+workflows:
+  ios-unsigned:
+    name: StorageInspector unsigned IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      vars:
+        BUNDLE_ID: com.example.storageinspector
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+        - pattern: master
+          include: true
+    scripts:
+      - name: Show toolchain
+        script: |
+          xcodebuild -version
+          xcodebuild -showsdks | head -n 20
+      - name: Build unsigned IPA
+        script: |
+          bash tools/build-ipa.sh "$BUNDLE_ID"
+      - name: Verify icons inside the .app
+        script: |
+          APP="build/ipa/Payload/StorageInspector.app"
+          test -d "$APP"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
+          echo "--- Alternate icons ---"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleAlternateIcons" "$APP/Info.plist" || echo "no alternate icons"
+          echo "--- Icon files ---"
+          ls -1 "$APP" | grep -E '^(AppIcon|Icon)' || true
+    artifacts:
+      - build/ipa/*.ipa
