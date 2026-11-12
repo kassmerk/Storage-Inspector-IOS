@@ -1,0 +1,489 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		ABCDEF0123456789ABCDEF40 /* StorageInspectorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF20 /* StorageInspectorApp.swift */; };
+		ABCDEF0123456789ABCDEF41 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF21 /* RootView.swift */; };
+		ABCDEF0123456789ABCDEF42 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF22 /* Theme.swift */; };
+		ABCDEF0123456789ABCDEF43 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF23 /* Components.swift */; };
+		ABCDEF0123456789ABCDEF44 /* StorageBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF24 /* StorageBar.swift */; };
+		ABCDEF0123456789ABCDEF45 /* StorageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF25 /* StorageModels.swift */; };
+		ABCDEF0123456789ABCDEF46 /* DemoCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF26 /* DemoCatalog.swift */; };
+		ABCDEF0123456789ABCDEF47 /* DeviceStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF27 /* DeviceStorage.swift */; };
+		ABCDEF0123456789ABCDEF48 /* SandboxFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF28 /* SandboxFiles.swift */; };
+		ABCDEF0123456789ABCDEF49 /* StorageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF29 /* StorageStore.swift */; };
+		ABCDEF0123456789ABCDEF4A /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF2A /* Formatters.swift */; };
+		ABCDEF0123456789ABCDEF4B /* StorageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF2B /* StorageView.swift */; };
+		ABCDEF0123456789ABCDEF4C /* StorageViewSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF2C /* StorageViewSections.swift */; };
+		ABCDEF0123456789ABCDEF4D /* StorageSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF2D /* StorageSummaryCard.swift */; };
+		ABCDEF0123456789ABCDEF4E /* AppRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF2E /* AppRowView.swift */; };
+		ABCDEF0123456789ABCDEF4F /* AppDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF2F /* AppDetailView.swift */; };
+		ABCDEF0123456789ABCDEF50 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF30 /* FileBrowserView.swift */; };
+		ABCDEF0123456789ABCDEF51 /* FileBrowserViewRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF31 /* FileBrowserViewRows.swift */; };
+		ABCDEF0123456789ABCDEF52 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF32 /* SettingsView.swift */; };
+		ABCDEF0123456789ABCDEF53 /* SettingsViewSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF33 /* SettingsViewSections.swift */; };
+		ABCDEF0123456789ABCDEF54 /* SettingsViewRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF34 /* SettingsViewRows.swift */; };
+		ABCDEF0123456789ABCDEF55 /* AboutSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF35 /* AboutSheet.swift */; };
+		ABCDEF0123456789ABCDEF56 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF36 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		ABCDEF0123456789ABCDEF11 /* StorageInspector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StorageInspector.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ABCDEF0123456789ABCDEF20 /* StorageInspectorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageInspectorApp.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF21 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF22 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF23 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF24 /* StorageBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageBar.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF25 /* StorageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageModels.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF26 /* DemoCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCatalog.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF27 /* DeviceStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceStorage.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF28 /* SandboxFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandboxFiles.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF29 /* StorageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageStore.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF2A /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF2B /* StorageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageView.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF2C /* StorageViewSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageViewSections.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF2D /* StorageSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageSummaryCard.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF2E /* AppRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRowView.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF2F /* AppDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailView.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF30 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF31 /* FileBrowserViewRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserViewRows.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF32 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF33 /* SettingsViewSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewSections.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF34 /* SettingsViewRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewRows.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF35 /* AboutSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSheet.swift; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF36 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ABCDEF0123456789ABCDEF13 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		ABCDEF0123456789ABCDEF01 = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF03 /* StorageInspector */,
+				ABCDEF0123456789ABCDEF02 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF02 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF11 /* StorageInspector.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF03 /* StorageInspector */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF04 /* App */,
+				ABCDEF0123456789ABCDEF05 /* Design */,
+				ABCDEF0123456789ABCDEF06 /* Models */,
+				ABCDEF0123456789ABCDEF07 /* Services */,
+				ABCDEF0123456789ABCDEF08 /* Features */,
+				ABCDEF0123456789ABCDEF0C /* Support */,
+				ABCDEF0123456789ABCDEF0B /* Resources */,
+			);
+			path = StorageInspector;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF04 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF20 /* StorageInspectorApp.swift */,
+				ABCDEF0123456789ABCDEF21 /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF05 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF22 /* Theme.swift */,
+				ABCDEF0123456789ABCDEF23 /* Components.swift */,
+				ABCDEF0123456789ABCDEF24 /* StorageBar.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF06 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF25 /* StorageModels.swift */,
+				ABCDEF0123456789ABCDEF26 /* DemoCatalog.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF07 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF27 /* DeviceStorage.swift */,
+				ABCDEF0123456789ABCDEF28 /* SandboxFiles.swift */,
+				ABCDEF0123456789ABCDEF29 /* StorageStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF08 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF09 /* Storage */,
+				ABCDEF0123456789ABCDEF0A /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF09 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF2B /* StorageView.swift */,
+				ABCDEF0123456789ABCDEF2C /* StorageViewSections.swift */,
+				ABCDEF0123456789ABCDEF2D /* StorageSummaryCard.swift */,
+				ABCDEF0123456789ABCDEF2E /* AppRowView.swift */,
+				ABCDEF0123456789ABCDEF2F /* AppDetailView.swift */,
+				ABCDEF0123456789ABCDEF30 /* FileBrowserView.swift */,
+				ABCDEF0123456789ABCDEF31 /* FileBrowserViewRows.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF0A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF32 /* SettingsView.swift */,
+				ABCDEF0123456789ABCDEF33 /* SettingsViewSections.swift */,
+				ABCDEF0123456789ABCDEF34 /* SettingsViewRows.swift */,
+				ABCDEF0123456789ABCDEF35 /* AboutSheet.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF0B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF36 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		ABCDEF0123456789ABCDEF0C /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF0123456789ABCDEF2A /* Formatters.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		ABCDEF0123456789ABCDEF10 /* StorageInspector */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ABCDEF0123456789ABCDEF16 /* Build configuration list for PBXNativeTarget "StorageInspector" */;
+			buildPhases = (
+				ABCDEF0123456789ABCDEF12 /* Sources */,
+				ABCDEF0123456789ABCDEF13 /* Frameworks */,
+				ABCDEF0123456789ABCDEF14 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StorageInspector;
+			productName = StorageInspector;
+			productReference = ABCDEF0123456789ABCDEF11 /* StorageInspector.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ABCDEF0123456789ABCDEF00 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					ABCDEF0123456789ABCDEF10 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = ABCDEF0123456789ABCDEF15 /* Build configuration list for PBXProject "StorageInspector" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ABCDEF0123456789ABCDEF01;
+			productRefGroup = ABCDEF0123456789ABCDEF02 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ABCDEF0123456789ABCDEF10 /* StorageInspector */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		ABCDEF0123456789ABCDEF14 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCDEF0123456789ABCDEF56 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		ABCDEF0123456789ABCDEF12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCDEF0123456789ABCDEF40 /* StorageInspectorApp.swift in Sources */,
+				ABCDEF0123456789ABCDEF41 /* RootView.swift in Sources */,
+				ABCDEF0123456789ABCDEF42 /* Theme.swift in Sources */,
+				ABCDEF0123456789ABCDEF43 /* Components.swift in Sources */,
+				ABCDEF0123456789ABCDEF44 /* StorageBar.swift in Sources */,
+				ABCDEF0123456789ABCDEF45 /* StorageModels.swift in Sources */,
+				ABCDEF0123456789ABCDEF46 /* DemoCatalog.swift in Sources */,
+				ABCDEF0123456789ABCDEF47 /* DeviceStorage.swift in Sources */,
+				ABCDEF0123456789ABCDEF48 /* SandboxFiles.swift in Sources */,
+				ABCDEF0123456789ABCDEF49 /* StorageStore.swift in Sources */,
+				ABCDEF0123456789ABCDEF4A /* Formatters.swift in Sources */,
+				ABCDEF0123456789ABCDEF4B /* StorageView.swift in Sources */,
+				ABCDEF0123456789ABCDEF4C /* StorageViewSections.swift in Sources */,
+				ABCDEF0123456789ABCDEF4D /* StorageSummaryCard.swift in Sources */,
+				ABCDEF0123456789ABCDEF4E /* AppRowView.swift in Sources */,
+				ABCDEF0123456789ABCDEF4F /* AppDetailView.swift in Sources */,
+				ABCDEF0123456789ABCDEF50 /* FileBrowserView.swift in Sources */,
+				ABCDEF0123456789ABCDEF51 /* FileBrowserViewRows.swift in Sources */,
+				ABCDEF0123456789ABCDEF52 /* SettingsView.swift in Sources */,
+				ABCDEF0123456789ABCDEF53 /* SettingsViewSections.swift in Sources */,
+				ABCDEF0123456789ABCDEF54 /* SettingsViewRows.swift in Sources */,
+				ABCDEF0123456789ABCDEF55 /* AboutSheet.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		ABCDEF0123456789ABCDEF17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		ABCDEF0123456789ABCDEF18 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		ABCDEF0123456789ABCDEF19 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Storage;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.storageinspector;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		ABCDEF0123456789ABCDEF1A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Storage;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.storageinspector;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		ABCDEF0123456789ABCDEF15 /* Build configuration list for PBXProject "StorageInspector" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCDEF0123456789ABCDEF17 /* Debug */,
+				ABCDEF0123456789ABCDEF18 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ABCDEF0123456789ABCDEF16 /* Build configuration list for PBXNativeTarget "StorageInspector" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCDEF0123456789ABCDEF19 /* Debug */,
+				ABCDEF0123456789ABCDEF1A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = ABCDEF0123456789ABCDEF00 /* Project object */;
+}
