@@ -14,14 +14,19 @@
 | Размер самого приложения (bundle) | обход `Bundle.main.bundleURL` | Да |
 | Documents & Data приложения | обход контейнера (без `.app`) | Да |
 | Файлы, папки и их размеры в «View Files» | `FileManager` + `URLResourceValues` | Да |
-| Размеры **других** приложений (Telegram, TikTok, …) | `Models/DemoCatalog.swift` | Нет, демо |
+| Размеры **других** приложений (Telegram, TikTok, …) | `LSApplicationProxy` → `staticDiskUsage` / `dynamicDiskUsage` (`Services/InstalledAppsProvider.swift`) | Да, когда iOS отвечает; иначе прочерк |
 | Иконки других приложений | иконка установленного приложения (приватный API) → PNG в `Resources/AppIcons` → обложка App Store | Иконки с устройства / свои / магазина |
 
-Важное ограничение iOS: приложение работает в песочнице и **не может** узнать,
-сколько места занимают другие приложения (даже имея на это разрешения — такого
-публичного API нет). Поэтому список приложений — демонстрационный набор данных,
-он включается/выключается в Settings. Всё остальное (ёмкость диска, свои размеры,
-файловый браузер) считается по-настоящему.
+Публичного API для размеров чужих приложений в iOS нет: приложение работает в
+песочнице. Но у `LSApplicationProxy` есть приватные геттеры `staticDiskUsage`
+(бандл, то есть «App Size») и `dynamicDiskUsage` (Documents & Data) — ими и
+пользуется системный экран «iPhone Storage». Sideload-сборка вызывает их через
+Obj-C runtime: если iOS отвечает, в списке настоящие цифры с этого устройства;
+если конкретная версия iOS возвращает 0 или геттер убрали — в строке прочерк, а
+не выдуманное число. Список приложений — это реально установленные приложения;
+демо-набор (`Models/DemoCatalog.swift`) остаётся только запасным вариантом для
+сборок, где приватный API уже закрыт. Ёмкость диска, свои размеры и файловый
+браузер считаются по-настоящему всегда.
 
 ### Иконки приложений в списке
 
@@ -50,31 +55,45 @@
 `bundleID` — остальное подхватится само. Свой PNG нужен, только если хочется конкретную
 картинку (или на iOS, где приватные API уже закрыты).
 
-### Режим «Installed apps» (приватный API)
+### Список приложений (приватный API)
 
 `Services/InstalledAppsProvider.swift` через Objective-C runtime достаёт
-`+[LSApplicationWorkspace defaultWorkspace]` → `-allInstalledApplications` и превращает
-каждый `LSApplicationProxy` в строку списка: имя, версия, вендор, bundle id и иконка с
-домашнего экрана. Что важно знать:
+`+[LSApplicationWorkspace defaultWorkspace]` → `-allInstalledApplications` (плюс
+`-installedApplications` и `-allApplications`, ответы сливаются) и превращает каждый
+`LSApplicationProxy` в строку списка: имя, версия, вендор, bundle id, иконка с домашнего
+экрана и размеры. Это **основной** список приложения — демо-набор показывается только там,
+где приватный API уже закрыт.
+
+Второй источник — обход папок с бандлами (`/var/containers/Bundle/Application/*/*.app`,
+`/Applications`, rootless `/var/jb/...`): он добирает приложения, которые база
+LaunchServices не отдаёт (скрытые установки TrollStore), и даёт измеренный размер там, где
+iOS отказывается отвечать. В обычной песочнице эти папки недоступны, обход просто ничего не
+находит.
 
 - это **приватный API**: работает только в сборке, подписанной своим сертификатом
   (sideload), и Apple может закрыть его в любой версии iOS;
-- размеры **чужих** приложений iOS не отдаёт даже так — вместо цифры в строке стоит «—»,
-  сортировка по размеру в этом режиме переключается на алфавитную;
+- размеры берутся из `-staticDiskUsage` / `-dynamicDiskUsage` того же прокси, а если геттеры
+  молчат — из обхода папки бандла. Когда iOS отвечает, цифры настоящие; когда не отвечает
+  ничего — прочерк «—», а не выдуманное число, и при сортировке по размеру такие строки уходят
+  в конец;
+- фильтруется только одно: скрытые записи Apple (`applicationType == Hidden`). Они снова
+  попадают в список, если включить в Settings тумблер **Show hidden apps** — тогда видны и
+  системные службы без иконки на домашнем экране;
 - ни один класс и селектор не линкуется при компиляции: всё ищется через runtime и каждое
   обращение проверяется, поэтому если Apple уберёт `LSApplicationWorkspace` или приватный
-  метод `UIImage`, переключатель сам станет недоступен (с объяснением в Settings), а
-  приложение останется на демо-списке вместо падения;
-- переключатель выключен по умолчанию, так что обычное поведение приложения не меняется.
+  метод `UIImage`, приложение останется на демо-списке вместо падения;
+- на экране Storage есть кнопка пересканирования (↻ рядом с заголовком «Installed»), а в
+  Settings — строка «Installed apps» со счётчиком и кнопкой **Rescan**.
 
 ## Экраны
 
 1. **Storage**
    - крупный заголовок, карточка «iPhone Storage» с полосой: Applications / Media / System Data / Available;
    - карточка «This app» с реальным размером и кнопкой **View Files**;
-   - блок «Applications» с сортировкой `Size ⇅` / `Name` и счётчиком;
-   - список приложений: иконка, название, «Last used: …», размер, шеврон;
-   - закреплённое снизу поле поиска «Applications» над таб-баром.
+   - блок «Installed» со счётчиком, сортировкой `Size ⇅` / `Name` и кнопкой пересканирования ↻;
+   - список реально установленных приложений: иконка, название, вендор, размер (или «—»), шеврон;
+   - закреплённое снизу поле поиска «Applications» над таб-баром: фильтрует по названию,
+     вендору и bundle id, круглый «×» справа очищает запрос и убирает клавиатуру.
 2. **App detail** (как страница Telegram в настройках iOS)
    - `App Size`, `Documents & Data`, `Total`;
    - кнопка **View Files** → файловый браузер песочницы;
@@ -85,9 +104,10 @@
      «Add Sample Files» для пустой папки.
 4. **Settings**
    - карточка поддержки (сердце, три пункта, кнопка **Share App** — системный ShareLink);
-   - переключатель демо-данных, переключатель **Installed apps** (реальный список приложений
-     и их иконки через приватный API, только для sideload), выбор единиц (Auto / GB / MB),
-     Refresh, Restore demo list;
+   - строка **Installed apps** со счётчиком и кнопкой **Rescan**, тумблер **Show hidden apps**
+     (скрытые системные службы Apple), выбор единиц (Auto / GB / MB),
+     Refresh measurements; демо-набор и Restore demo list видны только там, где приватный API
+     недоступен;
    - карточка **App Icon** — четыре цвета иконки приложения: **Orange** (по умолчанию),
      Indigo, Graphite, Crimson; переключение через `UIApplication.setAlternateIconName`;
    - карточка About: описание, Send Feedback (mailto), версия.
@@ -121,6 +141,11 @@ iOS после смены показывает системный алерт «�
 `StorageInspector/Resources/AppIconVariants/` с теми же именами
 (`icon-orange.png`, `icon-indigo.png`, `icon-graphite.png`, `icon-crimson.png`) и
 запустите сборку заново. Плейсхолдеры рисует `tools/make-icon.ps1`.
+
+Папка подключена в проект как folder reference, поэтому те же файлы попадают в бандл:
+карточка **App Icon** рисует в плитках именно их (`AppIconArtwork` в
+`Features/Settings/AppIconCard.swift`), а не нарисованную копию. Заменили PNG — поменялись
+и иконка на домашнем экране, и превью в настройках.
 
 Важно про исходники: нужен «полный» квадрат без внешних белых полей и без заранее
 скруглённых углов — маску (squircle) iOS накладывает сам. Если взять картинку с
@@ -159,6 +184,7 @@ StorageInspector/
 ├── tools/check-pbxproj.ps1             # проверка project.pbxproj
 ├── tools/check-swift.ps1               # проверка баланса скобок в Swift-файлах
 ├── tools/check-eol.ps1                 # проверка переводов строк (CRLF ломает bash на macOS)
+├── tools/bump-version.ps1              # +1 к номеру сборки (и смена версии) одной командой
 ├── tools/build-ipa.sh                  # сборка .ipa на macOS (для Feather)
 ├── tools/ExportOptions.plist           # шаблон для xcodebuild -exportArchive
 ├── .github/workflows/build-ipa.yml     # сборка .ipa в облаке GitHub Actions
@@ -188,9 +214,47 @@ Debug и Release) либо меняются в Xcode: таргет → **General
 **Version** / **Build**. `Formatters.version()` в About читает ровно
 `CFBundleShortVersionString`, то есть `MARKETING_VERSION`.
 
-После правки нужна только пересборка: push в `main` (workflow соберёт сам),
-либо **Actions → Build unsigned IPA → Run workflow**, либо на Mac
-`bash tools/build-ipa.sh <bundle-id>`. В артефактах всегда лежит свежий
+Руками файл править не нужно — для этого есть `tools/bump-version.ps1`
+(PowerShell, работает на Windows и на macOS):
+
+```powershell
+# только номер сборки +1, версия остаётся 1.1  → 1.1 (4) становится 1.1 (5)
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1
+
+# новая версия и сборка +1 → 1.2 (5)
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -Version 1.2
+
+# ровно 1.2 (1) — когда номер сборки нужно начать заново
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -Version 1.2 -Build 1
+
+# посмотреть, что изменится, ничего не записывая
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -DryRun
+```
+
+Скрипт меняет обе копии настроек (Debug и Release) синхронно, пишет файл без
+BOM и с LF-переводами строк и в конце сам запускает `check-pbxproj.ps1` и
+`check-eol.ps1` (`-SkipChecks`, если не нужно). Если одной из настроек в проекте
+не окажется ровно два раза, он ничего не запишет и завершится с кодом 1.
+
+### Выпуск новой версии: 5 шагов
+
+1. **Поднять номер** — `tools\bump-version.ps1` (см. выше). Без этого Feather
+   покажет тот же `1.1 (4)`, и невозможно понять, встала новая сборка или старая.
+2. **Проверить проект** — те же три скрипта, что гоняет Release-чеклист:
+   `check-swift.ps1`, `check-pbxproj.ps1`, `check-eol.ps1` (последний — с `-Fix`,
+   если правили файлы на Windows).
+3. **Закоммитить и запушить в `main`.** Workflow `Build unsigned IPA` собирает
+   `.ipa` и на push, так что отдельная кнопка не обязательна.
+4. **Забрать артефакт** — **Actions → Build unsigned IPA** → последний запуск →
+   внизу **Artifacts → StorageInspector-unsigned-ipa** (`.zip`), распаковать.
+   Если запуск красный из-за «The job was not acquired by Runner of type hosted»,
+   перезапустить с **Run workflow** и полем **runner** = `macos-15-intel`.
+5. **Установить поверх старой копии** — Feather → **+** → выбрать
+   `StorageInspector-unsigned.ipa` → **Sign** → **Install**. Данные и настройки
+   (`@AppStorage`) сохраняются, версия в About и в Feather обновится.
+
+На Mac те же шаги 1–2, а вместо 3–4 — `bash tools/build-ipa.sh <bundle-id>`,
+готовый `.ipa` появится в `build/ipa/`. В артефактах всегда лежит свежий
 `StorageInspector-unsigned.ipa` — имя файла не меняется, отличается версия
 внутри, и Feather при установке поверх старой копии показывает новый номер.
 
@@ -369,8 +433,9 @@ xcodebuild -exportArchive \
 |---|---|
 | Название на домашнем экране | `project.pbxproj` → `INFOPLIST_KEY_CFBundleDisplayName` |
 | Bundle ID | `project.pbxproj` → `PRODUCT_BUNDLE_IDENTIFIER` (в обеих конфигурациях) |
+| Версия / номер сборки | `tools\bump-version.ps1` (`-Version 1.2`, `-Build N`), либо `project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` |
 | Акцентный цвет | `Design/Theme.swift` → `Theme.accent` и `Assets.xcassets/AccentColor` |
-| Список приложений | `Models/DemoCatalog.swift` |
+| Список приложений | `Services/InstalledAppsProvider.swift` (реальные приложения), демо-набор — `Models/DemoCatalog.swift` |
 | Иконка (основная и 4 цвета) | `StorageInspector/Resources/AppIconVariants/` + `powershell -File tools/make-icon.ps1` |
 
 Иконки сгенерированы скриптом `tools/make-icon.ps1` (1024×1024, без альфы):
@@ -395,9 +460,9 @@ CRLF в `tools/build-ipa.sh` завалил сборку Codemagic за 4 сек
 
 ## Ограничения, о которых стоит помнить
 
-- Размеры чужих приложений недоступны в принципе (sandbox): показывать их можно
-  только как демо-данные или после джейлбрейка приватными API — такое приложение
-  не пройдёт App Store.
+- Размеры чужих приложений публичного API не имеют (sandbox). Sideload-сборка читает
+  их приватными геттерами `staticDiskUsage` / `dynamicDiskUsage`; там, где iOS отвечает
+  0 или геттера уже нет, показывается прочерк. В App Store такое приложение не пройдёт.
 - `Offload App` / `Delete App` для чужих приложений — только интерфейс: система
   не даёт стороннему приложению удалять другие приложения. Удаление в приложении
   убирает запись из списка.

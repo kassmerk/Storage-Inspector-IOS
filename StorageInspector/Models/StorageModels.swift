@@ -21,10 +21,16 @@ struct AppItem: Identifiable, Hashable {
     let lastUsed: String
     /// `true` for names that come from the device itself (this app, or the real apps list).
     let isReal: Bool
-    /// `false` when iOS hides the size — every app except this one. The UI shows a dash then.
-    var hasKnownSize: Bool = true
+    /// `false` when iOS hides the size of the app bundle itself. The UI shows a dash then.
+    var hasKnownAppSize: Bool = true
+    /// `false` when iOS hides the size of Documents & Data. The UI shows a dash then.
+    var hasKnownDataSize: Bool = true
 
     var totalSize: Int64 { appSize + dataSize }
+
+    /// `true` when iOS reported at least one of the two numbers. Only the size of this app is
+    /// always known; for the other apps it depends on what the private disk-usage getters answer.
+    var hasKnownSize: Bool { hasKnownAppSize || hasKnownDataSize }
 
     static func == (lhs: AppItem, rhs: AppItem) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }

@@ -36,6 +36,7 @@
 		ABCDEF0123456789ABCDEF5A /* AppIconLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF3A /* AppIconLoader.swift */; };
 		ABCDEF0123456789ABCDEF5C /* InstalledAppsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF3C /* InstalledAppsProvider.swift */; };
 		ABCDEF0123456789ABCDEF5D /* AppIcons in Resources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF3D /* AppIcons */; };
+		ABCDEF0123456789ABCDEF5E /* AppIconVariants in Resources */ = {isa = PBXBuildFile; fileRef = ABCDEF0123456789ABCDEF3E /* AppIconVariants */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -69,6 +70,7 @@
 		ABCDEF0123456789ABCDEF3A /* AppIconLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconLoader.swift; sourceTree = "<group>"; };
 		ABCDEF0123456789ABCDEF3C /* InstalledAppsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledAppsProvider.swift; sourceTree = "<group>"; };
 		ABCDEF0123456789ABCDEF3D /* AppIcons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AppIcons; sourceTree = "<group>"; };
+		ABCDEF0123456789ABCDEF3E /* AppIconVariants */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AppIconVariants; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -194,6 +196,7 @@
 			children = (
 				ABCDEF0123456789ABCDEF36 /* Assets.xcassets */,
 				ABCDEF0123456789ABCDEF3D /* AppIcons */,
+				ABCDEF0123456789ABCDEF3E /* AppIconVariants */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -266,6 +269,7 @@
 			files = (
 				ABCDEF0123456789ABCDEF56 /* Assets.xcassets in Resources */,
 				ABCDEF0123456789ABCDEF5D /* AppIcons in Resources */,
+				ABCDEF0123456789ABCDEF5E /* AppIconVariants in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,7 +434,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Storage;
@@ -461,7 +465,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Storage;

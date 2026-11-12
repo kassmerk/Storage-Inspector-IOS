@@ -52,9 +52,9 @@ struct AppDetailView: View {
     }
 
     /// The sandbox browser can only show *this* app's files, so the shortcut is hidden for the
-    /// apps that really belong to someone else on the device.
+    /// apps that really belong to someone else on the device. The demo rows keep it as a preview.
     private var showsSandboxLink: Bool {
-        !app.isReal || app.hasKnownSize
+        !app.isReal || app.id == "self"
     }
 
     var headerCard: some View {
@@ -85,9 +85,9 @@ struct AppDetailView: View {
             .padding(.bottom, 14)
 
             Separator(leading: 0)
-            InfoRow(title: "App Size", value: Formatters.size(app.appSize, known: app.hasKnownSize, unit: unit))
+            InfoRow(title: "App Size", value: Formatters.size(app.appSize, known: app.hasKnownAppSize, unit: unit))
             Separator(leading: 0)
-            InfoRow(title: "Documents & Data", value: Formatters.size(app.dataSize, known: app.hasKnownSize, unit: unit))
+            InfoRow(title: "Documents & Data", value: Formatters.size(app.dataSize, known: app.hasKnownDataSize, unit: unit))
             Separator(leading: 0)
             InfoRow(title: "Total", value: Formatters.size(app.totalSize, known: app.hasKnownSize, unit: unit))
         }
@@ -120,13 +120,13 @@ struct AppDetailView: View {
 
     var actions: some View {
         VStack(spacing: 10) {
-            if app.isReal && app.hasKnownSize {
+            if app.id == "self" {
                 ActionButton(title: "Refresh Size", kind: .standard) {
                     store.refresh()
                 }
                 caption("Recalculated from this app's bundle and data container.")
             } else if app.isReal {
-                caption("This row comes from iOS itself (private installed-apps API): the name, the version and the icon are real, but iOS keeps the size of other apps private, so the numbers above show a dash. iOS also does not let one app delete or offload another.")
+                caption(installedCaption)
             } else {
                 ActionButton(title: "Offload App") { }
                 caption("Preview only: iOS does not let an app offload other apps. On a real iPhone this lives in Settings › General › iPhone Storage.")
@@ -137,6 +137,14 @@ struct AppDetailView: View {
                 caption("Removes the entry from the demo list. Your iPhone storage is not touched.")
             }
         }
+    }
+
+    /// What the numbers above this caption mean for a row that came from the installed-apps scan.
+    private var installedCaption: String {
+        if app.hasKnownSize {
+            return "Sizes read from iOS itself through the private LSApplicationWorkspace disk-usage getters. A dash in one of the rows means that build hides that half of the footprint."
+        }
+        return "This row comes from iOS itself (private installed-apps API): the name, the version and the icon are real, but this iOS build does not report how much space the app takes, so the numbers above show a dash. iOS also does not let one app delete or offload another."
     }
 
     func caption(_ text: String) -> some View {

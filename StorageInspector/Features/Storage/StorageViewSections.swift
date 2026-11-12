@@ -56,7 +56,7 @@ extension StorageView {
 
     var applicationsHeader: some View {
         HStack(spacing: 10) {
-            Text(useInstalledApps ? "Installed" : "Applications")
+            Text(showsDemoFallback ? "Applications" : "Installed")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(.white)
 
@@ -69,25 +69,35 @@ extension StorageView {
 
             Spacer()
 
-            if useInstalledApps {
+            if usesInstalledApps {
                 if case .loading = store.installedState {
                     ProgressView()
                         .tint(Theme.secondaryLabel)
-                }
-            } else {
-                Button {
-                    sortMode = sortMode == .size ? .name : .size
-                } label: {
-                    HStack(spacing: 5) {
-                        Text(sortMode.title)
-                        Image(systemName: "arrow.up.arrow.down")
-                            .font(.system(size: 13, weight: .semibold))
+                } else {
+                    Button {
+                        store.loadInstalledApps(force: true)
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Theme.blue)
+                            .padding(6)
                     }
-                    .font(.system(size: 17))
-                    .foregroundStyle(Theme.blue)
+                    .buttonStyle(PressableCardStyle())
                 }
-                .buttonStyle(PressableCardStyle())
             }
+
+            Button {
+                sortMode = sortMode == .size ? .name : .size
+            } label: {
+                HStack(spacing: 5) {
+                    Text(sortMode.title)
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .font(.system(size: 17))
+                .foregroundStyle(Theme.blue)
+            }
+            .buttonStyle(PressableCardStyle())
         }
     }
 
@@ -120,25 +130,25 @@ extension StorageView {
                 title: "No applications found",
                 message: "Nothing matches “\(search)”."
             )
-        } else if useInstalledApps {
+        } else if usesInstalledApps {
             switch store.installedState {
             case .idle, .loading:
                 EmptyStateCard(
                     symbol: "hourglass",
                     title: "Reading installed apps",
-                    message: "Asking iOS for the apps on this iPhone and for their icons. This takes a second."
+                    message: "Asking iOS for the apps on this iPhone, their sizes and their icons. This takes a second."
                 )
             case .unavailable(let reason):
                 EmptyStateCard(
                     symbol: "exclamationmark.triangle",
                     title: "Installed apps unavailable",
-                    message: reason + " Turn the switch off in Settings to go back to the demo list."
+                    message: reason + " The demo list is shown instead."
                 )
             case .empty:
                 EmptyStateCard(
                     symbol: "square.grid.2x2",
                     title: "No apps found",
-                    message: "iOS returned an empty list through the private API. Turn the switch off in Settings to go back to the demo list."
+                    message: "iOS returned an empty list through the private API. Pull the refresh button next to the title to scan again."
                 )
             case .ready:
                 EmptyStateCard(
@@ -151,17 +161,38 @@ extension StorageView {
             EmptyStateCard(
                 symbol: "square.stack.3d.up",
                 title: "Demo list is hidden",
-                message: "Demo data is turned off. Enable it in Settings, or switch on “Installed apps” to see what is really on this iPhone."
+                message: "Demo data is turned off. Enable it in Settings until this iOS build exposes the installed apps again."
             )
         }
     }
 
+    /// Search pinned right above the tab bar, shaped like the App Library field: a capsule with a
+    /// magnifier on the left, plus a separate round button on the right that clears the query and
+    /// drops the keyboard (the small “×” inside the field only clears the text).
     var searchBar: some View {
-        SearchField(placeholder: "Applications", text: $search)
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
-            .background(Theme.background)
+        HStack(spacing: 10) {
+            SearchField(placeholder: "Applications", text: $search)
+
+            if !search.isEmpty {
+                Button {
+                    search = ""
+                    hideKeyboard()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 46, height: 46)
+                        .background(Circle().fill(Theme.cardElevated))
+                }
+                .buttonStyle(PressableCardStyle())
+                .transition(.scale(scale: 0.8).combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 6)
+        .background(Theme.background)
+        .animation(.easeInOut(duration: 0.15), value: search.isEmpty)
     }
 
     var footnote: some View {
@@ -173,9 +204,13 @@ extension StorageView {
     }
 
     var footnoteText: String {
-        if useInstalledApps {
-            return "The list and the icons come from iOS itself: this build reads the installed apps through the private LSApplicationWorkspace API, which only works in a sideloaded app. The sizes stay a dash because iOS never reveals how much space another app takes. Device capacity, this app's own sizes and the file browser are measured for real."
+        if !showsDemoFallback {
+            let measured = visibleApps.contains { $0.hasKnownSize }
+            if measured {
+                return "The list, the icons and the sizes come from iOS itself: the apps through the private LSApplicationWorkspace API, the numbers through its disk-usage getters. A row that shows a dash is one this iOS build would not measure — nothing here is invented. Settings › Show hidden apps adds Apple's hidden system services to the list. Device capacity, this app's own sizes and the file browser are measured for real."
+            }
+            return "The list and the icons come from iOS itself through the private LSApplicationWorkspace API, which only works in a sideloaded app. This iOS build reports no size for other apps, so those rows show a dash instead of a made-up number. Device capacity, this app's own sizes and the file browser are measured for real."
         }
-        return "iOS does not allow one app to read the storage used by other apps, so the sizes above are a demo dataset. The icons are the real ones: the icon of the app installed on this device, a bundled PNG, or the official App Store artwork. Device capacity, this app's own sizes and the file browser are measured for real."
+        return "The list below is the demo dataset that ships with the app: this iOS build either no longer exposes the installed apps or the scan came back empty. The icons are still the real ones: the icon of the app installed on this device, a bundled PNG, or the official App Store artwork. Device capacity, this app's own sizes and the file browser are measured for real."
     }
 }

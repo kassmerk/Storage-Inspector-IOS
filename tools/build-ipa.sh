@@ -63,7 +63,9 @@ for candidate in "$ROOT/StorageInspector/Resources/AppIconVariants" "$ROOT/Resou
 done
 if [ -n "$VARIANT_DIR" ]; then
   ALT_KEYS=""
-  for entry in "Indigo:icon-indigo" "Graphite:icon-graphite" "Crimson:icon-crimson"; do
+  # The dictionary key doubles as the name handed to `UIApplication.setAlternateIconName(_:)`
+  # (`AppIconStyle.alternateName`), so it has to be `IconIndigo` and not `Indigo`.
+  for entry in "IconIndigo:icon-indigo" "IconGraphite:icon-graphite" "IconCrimson:icon-crimson"; do
     KEY="${entry%%:*}"
     FILE="${entry##*:}"
     SRC="$VARIANT_DIR/$FILE.png"
@@ -71,19 +73,26 @@ if [ -n "$VARIANT_DIR" ]; then
       echo "warning: $SRC is missing - the $KEY icon is skipped"
       continue
     fi
-    sips -z 120 120 "$SRC" --out "$APP/Icon$KEY@2x.png" >/dev/null
-    sips -z 180 180 "$SRC" --out "$APP/Icon$KEY@3x.png" >/dev/null
+    sips -z 120 120 "$SRC" --out "$APP/$KEY@2x.png" >/dev/null
+    sips -z 180 180 "$SRC" --out "$APP/$KEY@3x.png" >/dev/null
     ALT_KEYS="$ALT_KEYS $KEY"
   done
   if [ -n "$ALT_KEYS" ]; then
-    /usr/libexec/PlistBuddy -c "Delete :CFBundleAlternateIcons" "$APP/Info.plist" >/dev/null 2>&1 || true
-    /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons dict" "$APP/Info.plist"
+    # `CFBundleAlternateIcons` belongs *inside* `CFBundleIcons`. At the plist root iOS simply
+    # ignores it, and `UIApplication.supportsAlternateIcons` stays false — exactly the "This build
+    # has no alternate icons inside" card the app showed.
+    /usr/libexec/PlistBuddy -c "Delete :CFBundleIcons:CFBundleAlternateIcons" "$APP/Info.plist" >/dev/null 2>&1 || true
+    if ! /usr/libexec/PlistBuddy -c "Print :CFBundleIcons" "$APP/Info.plist" >/dev/null 2>&1; then
+      /usr/libexec/PlistBuddy -c "Add :CFBundleIcons dict" "$APP/Info.plist"
+    fi
+    /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons dict" "$APP/Info.plist"
     for KEY in $ALT_KEYS; do
-      /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons:$KEY dict" "$APP/Info.plist"
-      /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons:$KEY:CFBundleIconFiles array" "$APP/Info.plist"
-      /usr/libexec/PlistBuddy -c "Add :CFBundleAlternateIcons:$KEY:CFBundleIconFiles:0 string Icon$KEY" "$APP/Info.plist"
+      /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons:$KEY dict" "$APP/Info.plist"
+      /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons:$KEY:CFBundleIconFiles array" "$APP/Info.plist"
+      /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundleAlternateIcons:$KEY:CFBundleIconFiles:0 string $KEY" "$APP/Info.plist"
     done
     echo "Alternate icons:$ALT_KEYS (orange stays the primary icon)"
+    /usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundleAlternateIcons" "$APP/Info.plist" | head -n 20
   fi
 fi
 /usr/libexec/PlistBuddy -c "Add :LSRequiresIPhoneOS bool true" "$APP/Info.plist" >/dev/null 2>&1 || true

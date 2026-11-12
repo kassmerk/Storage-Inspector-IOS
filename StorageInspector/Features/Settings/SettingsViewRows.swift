@@ -34,7 +34,7 @@ extension SettingsView {
     }
 
     var footnote: some View {
-        Text("Device capacity and this app's own sizes are read from the file system. Sizes of other apps are a demo dataset (or a dash in installed-apps mode), because iOS keeps them private.")
+        Text("Device capacity and this app's own sizes are read from the file system. Sizes of the other apps come from the private LSApplicationWorkspace disk-usage getters — a dash means this iOS build keeps that number private.")
             .font(.system(size: 12))
             .foregroundStyle(Theme.tertiaryLabel)
             .multilineTextAlignment(.center)

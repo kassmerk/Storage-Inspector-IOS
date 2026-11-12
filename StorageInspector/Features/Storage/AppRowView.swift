@@ -39,9 +39,9 @@ struct AppRowView: View {
         .contentShape(Rectangle())
     }
 
-    /// Apps read from the device have no "last used" date, so the vendor is shown instead.
+    /// Rows read from the device have no "last used" date, so the vendor is shown instead.
     private var subtitle: String {
-        app.hasKnownSize ? "Last used: \(app.lastUsed)" : app.developer
+        app.isReal ? app.developer : "Last used: \(app.lastUsed)"
     }
 }
 

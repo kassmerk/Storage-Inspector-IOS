@@ -29,8 +29,8 @@ enum SizeUnit: String, CaseIterable, Identifiable {
 enum SettingsKeys {
     static let sizeUnit = "storageInspector.sizeUnit"
     static let showDemoApps = "storageInspector.showDemoApps"
-    /// Turns the list into the apps really installed on this iPhone (private API).
-    static let useInstalledApps = "storageInspector.useInstalledApps"
+    /// Makes the scan list Apple's hidden system services as well (off by default).
+    static let showHiddenApps = "storageInspector.showHiddenApps"
 }
 
 enum Formatters {

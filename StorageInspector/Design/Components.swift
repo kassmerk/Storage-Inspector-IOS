@@ -149,6 +149,8 @@ struct SearchField: View {
             )
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
+            .submitLabel(.search)
+            .onSubmit { hideKeyboard() }
             .foregroundStyle(.white)
 
             if !text.isEmpty {
@@ -167,4 +169,18 @@ struct SearchField: View {
         .background(Capsule().fill(Theme.card))
         .overlay(Capsule().stroke(Color.white.opacity(0.06), lineWidth: 1))
     }
+}
+
+/// Drops the keyboard from anywhere in the app.
+///
+/// `SearchField` is a plain `TextField` without a `FocusState` of its own, so the responder-chain
+/// call is the shortest way to close the keyboard from the round “×” button next to it.
+@MainActor
+func hideKeyboard() {
+    UIApplication.shared.sendAction(
+        #selector(UIResponder.resignFirstResponder),
+        to: nil,
+        from: nil,
+        for: nil
+    )
 }

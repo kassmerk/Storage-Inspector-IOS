@@ -5,8 +5,9 @@ import SwiftUI
 /// `orange` is the primary icon (the one in `Assets.xcassets/AppIcon`), the other three are
 /// alternate icons declared in `CFBundleAlternateIcons` and applied with
 /// `UIApplication.setAlternateIconName(_:)`. The 1024x1024 sources live in
-/// `StorageInspector/Resources/AppIconVariants/` and are copied into the `.app` by
-/// `tools/build-ipa.sh` / the GitHub workflow (see the README).
+/// `StorageInspector/Resources/AppIconVariants/`, a folder reference: the same PNGs ship inside
+/// the `.app` (so the Settings picker draws them, see `AppIconArtwork`) and the packaging step
+/// resizes them into `Icon*.png` files for `CFBundleAlternateIcons`.
 enum AppIconStyle: String, CaseIterable, Identifiable {
     case orange
     case indigo

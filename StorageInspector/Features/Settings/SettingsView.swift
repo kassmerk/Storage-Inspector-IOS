@@ -4,7 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject var store: StorageStore
     @AppStorage(SettingsKeys.sizeUnit) var unitRaw: String = SizeUnit.automatic.rawValue
     @AppStorage(SettingsKeys.showDemoApps) var showDemoApps: Bool = true
-    @AppStorage(SettingsKeys.useInstalledApps) var useInstalledApps: Bool = false
+    @AppStorage(SettingsKeys.showHiddenApps) var showHiddenApps: Bool = false
 
     @State var showAbout = false
 
@@ -30,6 +30,10 @@ struct SettingsView: View {
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showAbout) {
                 AboutSheet()
+            }
+            .onChange(of: showHiddenApps) { _ in
+                // The filter lives in the provider, so the list has to be read again.
+                store.loadInstalledApps(force: true)
             }
         }
     }

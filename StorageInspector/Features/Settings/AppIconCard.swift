@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// "App Icon" card of the Settings screen — one tile per bundled icon colour.
 struct AppIconCard: View {
@@ -98,7 +99,9 @@ struct AppIconCard: View {
     }
 }
 
-/// Square preview of a shipped icon, drawn with shapes so no extra image assets are needed.
+/// Square preview of a shipped icon: the real 1024×1024 PNG from `Resources/AppIconVariants`,
+/// so the picker shows exactly the artwork the Home Screen will get. When that folder is not part
+/// of the bundle (an old build), the same badge is drawn with shapes instead.
 struct AppIconPreview: View {
     let style: AppIconStyle
     var selected: Bool = false
@@ -107,19 +110,9 @@ struct AppIconPreview: View {
     private var radius: CGFloat { size * 0.235 }
 
     var body: some View {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: style.gradient,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
+        tile
             .frame(width: size, height: size)
-            .overlay(
-                AppIconGlyph()
-                    .frame(width: size, height: size)
-            )
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(
@@ -140,6 +133,45 @@ struct AppIconPreview: View {
                         .offset(x: size * 0.06, y: size * 0.06)
                 }
             }
+    }
+
+    /// The shipped PNG, or the shape-drawn stand-in when the bundle has no `AppIconVariants`.
+    @ViewBuilder
+    private var tile: some View {
+        if let image = AppIconArtwork.image(for: style) {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } else {
+            LinearGradient(
+                colors: style.gradient,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(AppIconGlyph())
+        }
+    }
+}
+
+/// Loads (and caches) the four 1024×1024 PNGs of `Resources/AppIconVariants/`.
+enum AppIconArtwork {
+    private static var cache: [String: UIImage] = [:]
+
+    @MainActor
+    static func image(for style: AppIconStyle) -> UIImage? {
+        if let cached = cache[style.rawValue] { return cached }
+
+        guard
+            let url = Bundle.main.url(
+                forResource: style.sourceName,
+                withExtension: "png",
+                subdirectory: "AppIconVariants"
+            ),
+            let image = UIImage(contentsOfFile: url.path)
+        else { return nil }
+
+        cache[style.rawValue] = image
+        return image
     }
 }
 

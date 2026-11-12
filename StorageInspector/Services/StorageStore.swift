@@ -43,6 +43,9 @@ final class StorageStore: ObservableObject {
 
     /// Reads the list of really installed apps through the private API. The scan is cached for
     /// the session: pass `force: true` to repeat it (the Settings switch does that).
+    ///
+    /// `SettingsKeys.showHiddenApps` decides whether Apple's hidden daemons are listed as well; it
+    /// is read here, not passed in, so the Settings toggle only has to rescan.
     func loadInstalledApps(force: Bool = false) {
         if case .loading = installedState { return }
         if !force {
@@ -57,9 +60,10 @@ final class StorageStore: ObservableObject {
 
         installedState = .loading
         let ownBundleID = Bundle.main.bundleIdentifier
+        let includeHidden = UserDefaults.standard.bool(forKey: SettingsKeys.showHiddenApps)
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let found = InstalledAppsProvider.loadApps()
+            let found = InstalledAppsProvider.loadApps(includeHidden: includeHidden)
             let items = found
                 .filter { $0.bundleID != ownBundleID }
                 .map { StorageStore.makeInstalledApp($0) }
@@ -76,8 +80,9 @@ final class StorageStore: ObservableObject {
         apps.reduce(0) { $0 + $1.totalSize }
     }
 
-    /// One row per installed app. iOS reveals the name, the version and the icon, but never the
-    /// size, so `hasKnownSize` is `false` and the UI prints a dash instead of a fake number.
+    /// One row per installed app. The name, the version and the icon always come from iOS; the two
+    /// sizes come from the private disk-usage getters of `LSApplicationProxy`, so they are real
+    /// numbers when the system answers and a dash when it hides them.
     private static func makeInstalledApp(_ app: InstalledAppsProvider.InstalledApp) -> AppItem {
         AppItem(
             id: app.bundleID,
@@ -87,11 +92,12 @@ final class StorageStore: ObservableObject {
             version: app.version,
             symbol: "app.dashed",
             tint: [Theme.cardElevated, Theme.card],
-            appSize: 0,
-            dataSize: 0,
+            appSize: app.appSize ?? 0,
+            dataSize: app.dataSize ?? 0,
             lastUsed: "—",
             isReal: true,
-            hasKnownSize: false
+            hasKnownAppSize: app.appSize != nil,
+            hasKnownDataSize: app.dataSize != nil
         )
     }
 
