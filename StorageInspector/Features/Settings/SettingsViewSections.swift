@@ -333,9 +333,7 @@ extension SettingsView {
                     }
                 }
 
-                Text("`not readable` on a bundle folder and `0 entries` on every selector mean the same thing: this build is not allowed to see the other apps. `Scheme probes` is how many apps are asked about, `Scheme matches` is how many iOS confirmed — those matches are the `Detected apps` rows on the Storage screen. `0 declared in Info.plist` means the scheme list is missing from this build, and then only the per-bundle lookup channel can answer.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Theme.tertiaryLabel)
+                ExpandableNote(text: "`not readable` on a bundle folder and `0 entries` on every selector mean the same thing: this build is not allowed to see the other apps. `Scheme probes` is how many apps are asked about, `Scheme matches` is how many iOS confirmed — those matches are the `Detected apps` rows on the Storage screen. `0 declared in Info.plist` means the scheme list is missing from this build, and then only the per-bundle lookup channel can answer.")
             }
         }
         .cardStyle(padding: 16)

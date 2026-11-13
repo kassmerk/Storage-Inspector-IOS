@@ -5,7 +5,7 @@
 	<!--
 	  The only way a sandboxed app may ask iOS "is this app installed?": canOpenURL on a scheme
 	  the other app registers. iOS answers nothing for a scheme that is not listed here, and the
-	  list is capped at 50 entries per app — AppSchemeProbe.candidates carries the same 44 apps
+	  list is capped at 50 entries per app — AppSchemeProbe.candidates carries the same 50 apps
 	  (name, bundle id, developer, scheme) and must be kept in sync with this array.
 
 	  Everything else in Info.plist is still generated from the build settings in
@@ -58,6 +58,12 @@
 		<string>clashroyale</string>
 		<string>airbnb</string>
 		<string>booking</string>
+		<string>pinterest</string>
+		<string>linkedin</string>
+		<string>amzn</string>
+		<string>paypal</string>
+		<string>yandextaxi</string>
+		<string>aliexpress</string>
 	</array>
 </dict>
 </plist>

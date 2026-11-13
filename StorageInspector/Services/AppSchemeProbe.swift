@@ -31,11 +31,11 @@ enum AppSchemeProbe {
         let scheme: String
     }
 
-    /// 44 apps: below Apple's 50-scheme ceiling for `canOpenURL`, and the list `Resources/Info.plist`
-    /// declares. Adding a candidate means adding its scheme to that array as well, or the
-    /// `canOpenURL` channel answers `false` for it forever.
+    /// 50 apps: right at Apple's ceiling for `canOpenURL` (a build may declare at most 50 schemes),
+    /// and the list `Resources/Info.plist` declares. Adding a candidate means adding its scheme to
+    /// that array as well, or the `canOpenURL` channel answers `false` for it forever.
     static let candidates: [Candidate] = [
-        Candidate(name: "Telegram", developer: "Telegram FZ-LLC", bundleID: "org.telegram.iphone", scheme: "tg"),
+        Candidate(name: "Telegram", developer: "Telegram FZ-LLC", bundleID: "ph.telegra.Telegraph", scheme: "tg"),
         Candidate(name: "WhatsApp", developer: "Meta Platforms", bundleID: "net.whatsapp.WhatsApp", scheme: "whatsapp"),
         Candidate(name: "Instagram", developer: "Meta Platforms", bundleID: "com.burbn.instagram", scheme: "instagram"),
         Candidate(name: "TikTok", developer: "TikTok Pte. Ltd.", bundleID: "com.zhiliaoapp.musically", scheme: "snssdk1128"),
@@ -60,7 +60,7 @@ enum AppSchemeProbe {
         Candidate(name: "Signal", developer: "Signal Messenger", bundleID: "org.whispersystems.signal", scheme: "sgnl"),
         Candidate(name: "WeChat", developer: "Tencent", bundleID: "com.tencent.xin", scheme: "weixin"),
         Candidate(name: "VK", developer: "VK", bundleID: "com.vk.vkclient", scheme: "vk"),
-        Candidate(name: "Zoom", developer: "Zoom Video", bundleID: "us.zoom.xos", scheme: "zoomus"),
+        Candidate(name: "Zoom", developer: "Zoom Video", bundleID: "us.zoom.videomeetings", scheme: "zoomus"),
         Candidate(name: "Slack", developer: "Slack Technologies", bundleID: "com.tinyspeck.chatlyio", scheme: "slack"),
         Candidate(name: "Notion", developer: "Notion Labs", bundleID: "notion.id", scheme: "notion"),
         Candidate(name: "Outlook", developer: "Microsoft", bundleID: "com.microsoft.Outlook", scheme: "ms-outlook"),
@@ -68,7 +68,7 @@ enum AppSchemeProbe {
         Candidate(name: "Word", developer: "Microsoft", bundleID: "com.microsoft.Office.Word", scheme: "ms-word"),
         Candidate(name: "Excel", developer: "Microsoft", bundleID: "com.microsoft.Office.Excel", scheme: "ms-excel"),
         Candidate(name: "OneDrive", developer: "Microsoft", bundleID: "com.microsoft.skydrive", scheme: "ms-onedrive"),
-        Candidate(name: "Steam", developer: "Valve", bundleID: "com.valvesoftware.steam", scheme: "steam"),
+        Candidate(name: "Steam", developer: "Valve", bundleID: "com.valvesoftware.Steam", scheme: "steam"),
         Candidate(name: "Twitch", developer: "Twitch Interactive", bundleID: "tv.twitch", scheme: "twitch"),
         Candidate(name: "Shazam", developer: "Apple", bundleID: "com.shazam.Shazam", scheme: "shazam"),
         Candidate(name: "Duolingo", developer: "Duolingo", bundleID: "com.duolingo.DuolingoMobile", scheme: "duolingo"),
@@ -78,7 +78,13 @@ enum AppSchemeProbe {
         Candidate(name: "Brawl Stars", developer: "Supercell", bundleID: "com.supercell.laser", scheme: "brawlstars"),
         Candidate(name: "Clash Royale", developer: "Supercell", bundleID: "com.supercell.scroll", scheme: "clashroyale"),
         Candidate(name: "Airbnb", developer: "Airbnb, Inc.", bundleID: "com.airbnb.app", scheme: "airbnb"),
-        Candidate(name: "Booking.com", developer: "Booking.com", bundleID: "com.booking", scheme: "booking"),
+        Candidate(name: "Booking.com", developer: "Booking.com", bundleID: "com.booking.BookingApp", scheme: "booking"),
+        Candidate(name: "Pinterest", developer: "Pinterest", bundleID: "pinterest", scheme: "pinterest"),
+        Candidate(name: "LinkedIn", developer: "LinkedIn Corporation", bundleID: "com.linkedin.LinkedIn", scheme: "linkedin"),
+        Candidate(name: "Amazon", developer: "AMZN Mobile LLC", bundleID: "com.amazon.Amazon", scheme: "amzn"),
+        Candidate(name: "PayPal", developer: "PayPal, Inc.", bundleID: "com.yourcompany.PPClient", scheme: "paypal"),
+        Candidate(name: "Yandex Go", developer: "Yandex", bundleID: "ru.yandex.ytaxi", scheme: "yandextaxi"),
+        Candidate(name: "AliExpress", developer: "Alibaba Group", bundleID: "com.alibaba.iAliexpress", scheme: "aliexpress"),
     ]
 
     /// The schemes this build declares. Empty means the `Info.plist` key was lost — the
@@ -95,7 +101,7 @@ enum AppSchemeProbe {
 
     /// The candidates this iPhone answered for, as rows the Storage screen can show.
     ///
-    /// Runs on the main thread: `canOpenURL` is a UIKit call and the 44 checks are synchronous.
+    /// Runs on the main thread: `canOpenURL` is a UIKit call and the checks are synchronous.
     /// Sizes stay unknown (`hasKnownAppSize` / `hasKnownDataSize` are `false`), so the UI prints a
     /// dash instead of a zero.
     static func detect() -> [AppItem] {

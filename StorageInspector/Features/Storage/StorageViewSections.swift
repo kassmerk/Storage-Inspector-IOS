@@ -92,6 +92,22 @@ extension StorageView {
                 .padding(.vertical, 3)
                 .background(Capsule().fill(Theme.cardElevated))
 
+            Button {
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    isSearchVisible.toggle()
+                }
+                if !isSearchVisible {
+                    search = ""
+                    hideKeyboard()
+                }
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(isSearchVisible ? Theme.blue : Theme.secondaryLabel)
+                    .padding(4)
+            }
+            .buttonStyle(PressableCardStyle())
+
             Spacer()
 
             if showsImportButton {
@@ -243,30 +259,102 @@ extension StorageView {
     /// Search pinned right above the tab bar, shaped like the App Library field: a capsule with a
     /// magnifier on the left, plus a separate round button on the right that clears the query and
     /// drops the keyboard (the small “×” inside the field only clears the text).
-    var searchBar: some View {
+    var searchRow: some View {
         HStack(spacing: 10) {
-            SearchField(placeholder: "Applications", text: $search)
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Theme.secondaryLabel)
 
-            if !search.isEmpty {
-                Button {
-                    search = ""
-                    hideKeyboard()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 46, height: 46)
-                        .background(Circle().fill(Theme.cardElevated))
+                TextField(
+                    "",
+                    text: $search,
+                    prompt: Text("Search by name").foregroundColor(Theme.secondaryLabel)
+                )
+                .focused($searchFocused)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .onSubmit { hideKeyboard() }
+                .foregroundStyle(.white)
+
+                if !search.isEmpty {
+                    Button {
+                        search = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(Theme.tertiaryLabel)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(PressableCardStyle())
-                .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
+            .font(.system(size: 17))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(Capsule().fill(Theme.card))
+            .overlay(Capsule().stroke(Color.white.opacity(0.06), lineWidth: 1))
+
+            Button {
+                search = ""
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    isSearchVisible = false
+                }
+                hideKeyboard()
+            } label: {
+                Text("Cancel")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.blue)
+            }
+            .buttonStyle(PressableCardStyle())
         }
         .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 6)
-        .background(Theme.background)
-        .animation(.easeInOut(duration: 0.15), value: search.isEmpty)
+        .onAppear {
+            // The magnifier is a deliberate tap, so the field can open with the keyboard up.
+            searchFocused = true
+        }
+    }
+
+    /// Shown while the rows come from the URL-scheme probe: it can name an app but never measure
+    /// it, and it only knows the schemes in `AppSchemeProbe`. The imported list is the complete
+    /// one, so the action that fixes both problems sits right above the rows.
+    var importHintCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.yellow)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Not every app, and no sizes")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                    Text("iOS 26 gives a sandboxed app neither the installed-app list nor a per-app size. These rows are the ones the URL-scheme probe confirmed, so their size stays a dash.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.tertiaryLabel)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Button {
+                showImportSheet = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "square.and.arrow.down.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Import the full list")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Theme.accent)
+                )
+            }
+            .buttonStyle(PressableCardStyle())
+        }
+        .cardStyle(padding: 16)
     }
 
     var footnote: some View {
@@ -286,9 +374,13 @@ extension StorageView {
             }
             return "The list and the icons come from iOS itself through the private LSApplicationWorkspace API, which only answers a privileged install. This iOS build reports no size for other apps, so those rows show a dash instead of a made-up number. Device capacity, this app's own sizes and the file browser are measured for real."
         case .imported:
-            return "These \(visibleApps.count) rows come from the list you imported from your computer, not from iOS: on this iPhone a sandboxed app cannot read the installed-app database at all, so a list produced where iOS does allow it (a paired Mac or PC) is the only complete one. Sizes are shown exactly as the imported text had them — a row without a number keeps its dash and nothing is estimated — and the icons are the official App Store artwork looked up by bundle id. To update the list, import again from the header button or Settings › Import app list; iOS keeps its own numbers in Settings › General › iPhone Storage. Device capacity, this app's own sizes and the file browser are measured for real."
+            var text = "These \(visibleApps.count) rows come from the list you imported from your computer, not from iOS: on this iPhone a sandboxed app cannot read the installed-app database at all, so a list produced where iOS does allow it (a paired Mac or PC) is the only complete one. Sizes are shown exactly as the imported text had them — a row without a number keeps its dash and nothing is estimated — and the icons are the official App Store artwork looked up by bundle id. To update the list, import again from the header button or Settings › Import app list; iOS keeps its own numbers in Settings › General › iPhone Storage. Device capacity, this app's own sizes and the file browser are measured for real."
+            if probedExtraCount > 0 {
+                text = "\(store.importedApps.count) of these rows came from your imported text, and \(probedExtraCount) more were confirmed by iOS after that text was made — those keep their dash, because iOS does not report another app's size to a sandboxed build. " + text
+            }
+            return text
         case .detected:
-            return "These \(visibleApps.count) apps are really on this iPhone: iOS confirmed each one for the URL-scheme probe (the list of candidates is in Services/AppSchemeProbe.swift, the schemes in Resources/Info.plist). Their sizes are not here because iOS never reports the size of another app to a sandboxed app — a dash there is the honest answer, not a missing feature. An app that registers none of the probed schemes cannot be seen this way. For per-app sizes iOS keeps its own privileged screen: Settings › General › iPhone Storage. Device capacity, this app's own sizes and the file browser are measured for real."
+            return "These \(visibleApps.count) apps are really on this iPhone: iOS confirmed each one for the URL-scheme probe, and that probe can only ask about the \(AppSchemeProbe.candidates.count) apps listed in Services/AppSchemeProbe.swift (their schemes are in Resources/Info.plist — Apple allows 50 per app). An app that is not on that list, or that registers none of those schemes, cannot be seen this way, which is why this list is shorter than Settings › General › iPhone Storage; the import button puts the complete one on screen. Their sizes are not here either, because iOS never reports the size of another app to a sandboxed app — a dash there is the honest answer, not a missing feature. Device capacity, this app's own sizes and the file browser are measured for real."
         case .demo:
             return "These \(visibleApps.count) rows are the demo dataset that ships with the app, not the apps on this iPhone. It is switched on in Settings › Demo applications; the real scan found nothing, and the URL-scheme probe confirmed none of its candidates. The icons are still real: a PNG taken from the app bundle, the icon iOS draws on the Home Screen, or the official App Store artwork. Device capacity, this app's own sizes and the file browser are measured for real."
         case .none:

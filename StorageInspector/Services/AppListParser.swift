@@ -27,7 +27,11 @@ enum AppListParser {
     /// Upper bound, so a wrong paste cannot fill the defaults database.
     private static let maximumApps = 4000
 
-    static func parse(_ text: String) -> Result {
+    static func parse(_ raw: String) -> Result {
+        // A list saved by a Windows tool may start with a byte-order mark. It is not part of the
+        // first line, and it would hide the column header from `isHeader`.
+        let text = raw.replacingOccurrences(of: "\u{FEFF}", with: "")
+
         var result = Result()
         let lines = text.components(separatedBy: .newlines)
         // A list with no bundle id at all (`Settings › iPhone Storage` copies) has to accept bare
@@ -79,12 +83,21 @@ enum AppListParser {
 
         var version: String?
         if let quoted = quotedName(rest) {
-            // `1.2.3 "Instagram"`: the order one of the older tools used.
-            let before = rest.replacingOccurrences(of: "\"\(quoted)\"", with: "")
+            // Two orders exist: `1.2.3 "Instagram"` (the quoted part is the name) and
+            // `Instagram, "1.2.3"` (the quoted part is the version). The second one used to be read
+            // as the first, which left a version where the name belongs — and a name without a
+            // letter is rejected, so the whole app line disappeared from the list.
+            let outside = rest.replacingOccurrences(of: "\"\(quoted)\"", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .trimmingCharacters(in: CharacterSet(charactersIn: ",-:—–"))
-            if isVersion(before) { version = before }
-            rest = quoted
+
+            if isVersion(quoted) {
+                version = quoted
+                rest = outside
+            } else {
+                if isVersion(outside) { version = outside }
+                rest = quoted
+            }
         } else if let split = leadingVersion(rest) {
             version = split.version
             rest = split.rest

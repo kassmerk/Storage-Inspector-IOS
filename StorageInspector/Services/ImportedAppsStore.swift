@@ -24,22 +24,43 @@ enum ImportedAppsStore {
     /// Merges a freshly parsed list into the saved one. A row with the same id is replaced, so
     /// importing a newer export updates names, versions and sizes instead of duplicating rows; a
     /// missing number never overwrites one that is already there.
+    ///
+    /// The same app can arrive under two identities — once with its bundle id (a PC export) and
+    /// once by name only (a copy of Settings › iPhone Storage) — so a row without a bundle id is
+    /// also matched on the normalized name. Without that, importing a second list in the other
+    /// format would double every row, which reads as "the apps are listed twice" rather than as
+    /// the merge it is.
     @discardableResult
     static func merge(_ incoming: [ImportedApp], into defaults: UserDefaults = .standard) -> [ImportedApp] {
         var merged = load(from: defaults)
         var index: [String: Int] = [:]
-        for (position, app) in merged.enumerated() { index[app.id] = position }
+        var names: [String: Int] = [:]
+        for (position, app) in merged.enumerated() {
+            index[app.id] = position
+            let key = ImportedApp.key(app.name)
+            if !key.isEmpty { names[key] = position }
+        }
 
         for app in incoming {
-            if let position = index[app.id] {
+            let key = ImportedApp.key(app.name)
+            let position = index[app.id] ?? (key.isEmpty ? nil : names[key])
+
+            if let position = position {
                 var existing = merged[position]
+                // A bundle id is the better identity: it is what the icon lookup and the probe use,
+                // and it survives a rename in the store.
+                if existing.bundleID == nil, let bundleID = app.bundleID { existing.bundleID = bundleID }
                 if !app.name.isEmpty { existing.name = app.name }
                 if let version = app.version { existing.version = version }
                 if let size = app.appSize { existing.appSize = size }
                 if let size = app.dataSize { existing.dataSize = size }
                 merged[position] = existing
+                index[existing.id] = position
+                let mergedKey = ImportedApp.key(existing.name)
+                if !mergedKey.isEmpty { names[mergedKey] = position }
             } else {
                 index[app.id] = merged.count
+                if !key.isEmpty { names[key] = merged.count }
                 merged.append(app)
             }
         }

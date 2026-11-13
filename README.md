@@ -15,7 +15,7 @@
 | Documents & Data приложения | обход контейнера (без `.app`) | Да |
 | Файлы, папки и их размеры в «View Files» | `FileManager` + `URLResourceValues` | Да |
 | Размеры **других** приложений (Telegram, TikTok, …) | `LSApplicationProxy` → `staticDiskUsage` / `dynamicDiskUsage` (`Services/InstalledAppsProvider.swift`) | Да, когда iOS отвечает; иначе прочерк |
-| Иконки других приложений | иконка установленного приложения (приватный API) → PNG в `Resources/AppIcons` → обложка App Store | Иконки с устройства / свои / магазина |
+| Иконки других приложений | PNG в `Resources/AppIcons` → иконка установленного приложения (приватный API) → обложка App Store по bundle id | Иконки с устройства / свои / магазина |
 
 Публичного API для размеров чужих приложений в iOS нет: приложение работает в
 песочнице. Но у `LSApplicationProxy` есть приватные геттеры `staticDiskUsage`
@@ -23,10 +23,64 @@
 пользуется системный экран «iPhone Storage». Sideload-сборка вызывает их через
 Obj-C runtime: если iOS отвечает, в списке настоящие цифры с этого устройства;
 если конкретная версия iOS возвращает 0 или геттер убрали — в строке прочерк, а
-не выдуманное число. Список приложений — это реально установленные приложения;
-демо-набор (`Models/DemoCatalog.swift`) остаётся только запасным вариантом для
-сборок, где приватный API уже закрыт. Ёмкость диска, свои размеры и файловый
-браузер считаются по-настоящему всегда.
+не выдуманное число. Список приложений — это реально установленные приложения, но
+только если iOS вообще разрешает их читать (см. ниже). Полный список всех приложений
+даёт только импорт с компьютера (см. «Импорт полного списка»). Ёмкость диска, свои размеры,
+файловый браузер и приложения, подтверждённые URL-схемами, считаются по-настоящему
+всегда.
+
+### iOS 26 без TrollStore: что видно, а что нет
+
+Обычная подпись (Feather с сертификатом, Xcode, App Store) выдаёт сертификат, а не
+entitlement `platform-application`, поэтому `LSApplicationWorkspace` отвечает пустыми
+списками, а папки бандлов и размеры чужих приложений недоступны. Кодом это не
+обходится, а на iOS 26 TrollStore (как и джейлбрейк) не существует. Поэтому у списка
+четыре честных источника, и заголовок прямо говорит, какой из них показан:
+
+| Источник списка | Когда работает | Размеры |
+|---|---|---|
+| `LSApplicationWorkspace` — весь список | только привилегированная установка (TrollStore) | да, если iOS отвечает |
+| **Импорт списка с компьютера** — `Services/AppListParser.swift` + `Services/ImportedAppsStore.swift`, экран Settings → Import app list | всегда — **единственный способ увидеть все приложения** | только те, что были в тексте; остальные — прочерк |
+| URL-схемы — `Services/AppSchemeProbe.swift`, 50 приложений, объявлены в `Resources/Info.plist` → `LSApplicationQueriesSchemes` | всегда | нет, прочерк |
+| `Models/DemoCatalog.swift` — только по переключателю Settings → Demo applications (по умолчанию **выключен**) | демо-числа | демо-числа |
+
+Заголовок списка поэтому называется `Installed`, `Imported list`, `Detected apps` или
+`Demo data`. Приложение, не зарегистрировавшее ни одну из 50 проверяемых схем, пробой
+увидеть нельзя — это ограничение iOS, а не приложения; полный список даёт только импорт.
+
+Импортированный список и проба объединяются: строку, которую подтвердила URL-схема и
+которой нет в импортированном тексте (переустановка, сборка не из App Store), экран всё
+равно показывает — с прочерком вместо размера.
+
+
+### Импорт полного списка (iOS 26)
+
+Единственный способ показать **все** приложения на обычной подписи — собрать список там,
+где iOS это разрешает, и принести его в приложение (`Settings → Import app list`,
+`Features/Settings/ImportAppsView.swift`). Экран принимает вставленный текст или файл
+(`.txt` / `.csv` / `.tsv`) и понимает три источника:
+
+1. **ПК или Мак + libimobiledevice** — телефон подключён и доверен, джейлбрейк не нужен:
+
+   ```bash
+   ideviceinstaller -l -o list_all
+   ```
+
+   На Windows то же самое делает `powershell -File tools\get-app-list.ps1`: он ищет
+   `ideviceinstaller` в `PATH` или в `tools\libimobiledevice\`, пишет вывод в `app-list.txt`
+   и подсказывает дальнейшие шаги.
+2. **CSV из настольной утилиты** (3uTools и подобные) — колонки распознаются по смыслу,
+   порядок не важен: bundle id, название, версия, размер.
+3. **Копия экрана Settings › General › iPhone Storage** — названия и размеры без bundle id;
+   парсер склеивает «название» со следующей строкой, в которой стоит только размер.
+
+Разбор делает `Services/AppListParser.swift`: он пропускает заголовки и строку `Total: …`,
+понимает `2.14 GB`, `7,3 ГБ` и «сырые» байты, а всё, что не похоже на приложение,
+отбрасывает — ничего не выдумывается. Размеры берутся только из текста: строка без числа
+показывает прочерк. Список лежит в `UserDefaults` (`Services/ImportedAppsStore.swift`),
+переживает перезапуск и обновление приложения, а повторный импорт обновляет совпадения по
+bundle id вместо дублей.
+
 
 ### Иконки приложений в списке
 
@@ -42,14 +96,18 @@ Obj-C runtime: если iOS отвечает, в списке настоящие
    `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]` поверх
    `LSApplicationWorkspace` (`Services/InstalledAppsProvider.swift`). Пробуется всегда, когда
    iOS ещё отвечает на этот вызов, — и в демо-режиме тоже: если приложение стоит на телефоне,
-   плитка показывает именно его иконку с домашнего экрана, без сети.
-3. **Обложка из каталога App Store** — один запрос на приложение
-   `https://itunes.apple.com/lookup?bundleId=…&country=us` по `bundleID` из
-   `DemoCatalog.apps`; берётся `artworkUrl512` (иначе `artworkUrl100`, переписанный на
-   `512x512bb`), картинка кладётся в `Library/Caches/AppIcons/` и в следующий раз
-   появляется сразу из кэша.
+   плитка показывает именно его иконку с домашнего экрана, без сети. Строку, которую подтвердила
+   URL-схема (`isDetectedOnly`), этот источник тоже может нарисовать, но только **последним**:
+   обложка магазина официальнее, а приватный вызов на закрытой iOS умеет вернуть серую плитку.
+3. **Обложка из каталога App Store** — `lookup?bundleId=…` по bundle id строки, а если магазин
+   такого id не знает — поиск по названию. Оба ответа сверяются с bundle id строки: чужую
+   картинку (тот же случай с VK, у которого магазин отдавал иконку другого приложения) плитка не
+   покажет. Витрины перебираются по порядку: регион телефона → `US` → `RU`, потому что часть
+   приложений есть только в своей стране. `artworkUrl512` (иначе `artworkUrl100`,
+   переписанный на `512x512bb`) кладётся в `Library/Caches/AppIcons-v3/` и в следующий раз
+   появляется сразу из кэша; папка версионирована, чтобы старые неверные картинки не жили вечно.
 4. **Заглушка** — градиент с SF Symbol, если ничего не нашлось: Apple Photos, сама
-   программа, вымышленные строки, офлайн.
+   программа, вымышленные строки, офлайн, а также VK, которого в App Store больше нет.
 
 Добавить демо-приложение с настоящей иконкой: строка в `DemoCatalog.apps` с полем
 `bundleID` — остальное подхватится само. Свой PNG нужен, только если хочется конкретную
@@ -167,15 +225,20 @@ StorageInspector/
 │   ├── Models/StorageModels.swift      # AppItem, DeviceCapacity, SandboxEntry, SizeSortMode
 │   ├── Models/DemoCatalog.swift        # демо-набор приложений
 │   ├── Models/AppIconStyle.swift       # цвета иконки: orange (по умолчанию), indigo, graphite, crimson
+│   ├── Models/ImportedApp.swift        # одна строка импортированного списка приложений
 │   ├── Services/DeviceStorage.swift    # реальная ёмкость диска
 │   ├── Services/SandboxFiles.swift     # размеры, обход папок, демо-файлы
 │   ├── Services/StorageStore.swift     # ObservableObject-состояние
 │   ├── Services/AppIconManager.swift   # обёртка над setAlternateIconName
 │   ├── Services/AppIconLoader.swift     # иконки строк: PNG из бандла → иконка iOS → обложка App Store
 │   ├── Services/InstalledAppsProvider.swift # приватный LSApplicationWorkspace: список и иконки
+│   ├── Services/AppSchemeProbe.swift   # честный список без привилегий: 50 приложений по URL-схемам
+│   ├── Services/AppListParser.swift    # разбор импортированного списка: ideviceinstaller, CSV, копия экрана
+│   ├── Services/ImportedAppsStore.swift # хранение импортированного списка между запусками
 │   ├── Support/Formatters.swift        # единицы измерения, ключи @AppStorage
 │   ├── Features/Storage/*.swift        # Storage, детали, файловый браузер
-│   ├── Features/Settings/*.swift       # настройки и About
+│   ├── Features/Settings/*.swift       # настройки, Import app list и About
+│   ├── Resources/Info.plist             # LSApplicationQueriesSchemes (50 схем) — остальное генерирует Xcode
 │   ├── Resources/Assets.xcassets       # AppIcon (1024×1024, оранжевая) + AccentColor
 │   ├── Resources/AppIconVariants/      # icon-orange / icon-indigo / icon-graphite / icon-crimson.png
 │   └── Resources/AppIcons/             # icon-<bundle-id>.png / icon-<id>.png — свои иконки строк (folder reference)
@@ -184,6 +247,8 @@ StorageInspector/
 ├── tools/check-pbxproj.ps1             # проверка project.pbxproj
 ├── tools/check-swift.ps1               # проверка баланса скобок в Swift-файлах
 ├── tools/check-eol.ps1                 # проверка переводов строк (CRLF ломает bash на macOS)
+├── tools/check-schemes.ps1             # сверка AppSchemeProbe.candidates с LSApplicationQueriesSchemes
+├── tools/get-app-list.ps1              # список приложений с подключённого iPhone → app-list.txt
 ├── tools/bump-version.ps1              # +1 к номеру сборки (и смена версии) одной командой
 ├── tools/build-ipa.sh                  # сборка .ipa на macOS (для Feather)
 ├── tools/ExportOptions.plist           # шаблон для xcodebuild -exportArchive
@@ -206,7 +271,7 @@ Windows не умеет собирать iOS-приложения: `xcodebuild`,
 Номер версии берётся из build settings, а не из отдельного `Info.plist`
 (Xcode генерирует его сам: `GENERATE_INFOPLIST_FILE = YES`):
 
-- `MARKETING_VERSION` — то, что видно в About и в Feather (`1.1`);
+- `MARKETING_VERSION` — то, что видно в About и в Feather (`1.4`);
 - `CURRENT_PROJECT_VERSION` — номер сборки, целое число (`2`, `3`, …).
 
 Обе строки лежат в `StorageInspector.xcodeproj/project.pbxproj` (по два раза —
@@ -218,14 +283,14 @@ Debug и Release) либо меняются в Xcode: таргет → **General
 (PowerShell, работает на Windows и на macOS):
 
 ```powershell
-# только номер сборки +1, версия остаётся 1.1  → 1.1 (4) становится 1.1 (5)
+# только номер сборки +1, версия остаётся 1.3  → 1.3 (6) становится 1.3 (7)
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1
 
-# новая версия и сборка +1 → 1.2 (5)
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -Version 1.2
+# новая версия и сборка +1 → 1.4 (10)
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -Version 1.4
 
-# ровно 1.2 (1) — когда номер сборки нужно начать заново
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -Version 1.2 -Build 1
+# ровно 1.3 (1) — когда номер сборки нужно начать заново
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -Version 1.3 -Build 1
 
 # посмотреть, что изменится, ничего не записывая
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\bump-version.ps1 -DryRun
@@ -239,7 +304,7 @@ BOM и с LF-переводами строк и в конце сам запус�
 ### Выпуск новой версии: 5 шагов
 
 1. **Поднять номер** — `tools\bump-version.ps1` (см. выше). Без этого Feather
-   покажет тот же `1.1 (4)`, и невозможно понять, встала новая сборка или старая.
+   покажет тот же `1.3 (6)`, и невозможно понять, встала новая сборка или старая.
 2. **Проверить проект** — те же три скрипта, что гоняет Release-чеклист:
    `check-swift.ps1`, `check-pbxproj.ps1`, `check-eol.ps1` (последний — с `-Fix`,
    если правили файлы на Windows).
@@ -435,7 +500,8 @@ xcodebuild -exportArchive \
 | Bundle ID | `project.pbxproj` → `PRODUCT_BUNDLE_IDENTIFIER` (в обеих конфигурациях) |
 | Версия / номер сборки | `tools\bump-version.ps1` (`-Version 1.2`, `-Build N`), либо `project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` |
 | Акцентный цвет | `Design/Theme.swift` → `Theme.accent` и `Assets.xcassets/AccentColor` |
-| Список приложений | `Services/InstalledAppsProvider.swift` (реальные приложения), демо-набор — `Models/DemoCatalog.swift` |
+| Список приложений | `Services/InstalledAppsProvider.swift` (реальные приложения), `Services/AppListParser.swift` + `Services/ImportedAppsStore.swift` (импорт с компьютера), `Services/AppSchemeProbe.swift` (URL-схемы), демо-набор — `Models/DemoCatalog.swift` |
+| Список проверяемых приложений | `Services/AppSchemeProbe.swift` → `candidates` **и** `StorageInspector/Resources/Info.plist` → `LSApplicationQueriesSchemes` (до 50 схем, держать в синхроне) |
 | Иконка (основная и 4 цвета) | `StorageInspector/Resources/AppIconVariants/` + `powershell -File tools/make-icon.ps1` |
 
 Иконки сгенерированы скриптом `tools/make-icon.ps1` (1024×1024, без альфы):

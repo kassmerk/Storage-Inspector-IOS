@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 /// Sheet that brings an app list over from a computer.
@@ -95,9 +96,20 @@ struct ImportAppsView: View {
                 message = "That file could not be read."
                 return
             }
-            guard let content = String(data: data, encoding: .utf8)
-                ?? String(data: data, encoding: .windowsCP1251)
-                ?? String(data: data, encoding: .isoLatin1) else {
+
+            // PowerShell's `Out-File` writes UTF-16, so a list saved on Windows arrives in that
+            // encoding; the byte-order mark decides, and it is stripped afterwards so the first
+            // line is not "the header with an invisible character in front".
+            let decoded: String?
+            if data.starts(with: [0xFF, 0xFE]) || data.starts(with: [0xFE, 0xFF]) {
+                decoded = String(data: data, encoding: .utf16)
+            } else {
+                decoded = String(data: data, encoding: .utf8)
+                    ?? String(data: data, encoding: .windowsCP1251)
+                    ?? String(data: data, encoding: .isoLatin1)
+            }
+
+            guard let content = decoded.map({ stripByteOrderMark($0) }) else {
                 message = "That file is not text."
                 return
             }
@@ -107,6 +119,24 @@ struct ImportAppsView: View {
         case .failure(let error):
             message = error.localizedDescription
         }
+    }
+
+    /// Removes the U+FEFF a UTF-16 file starts with, so its first line reads like every other one
+    /// and the column header is recognized as a header.
+    private func stripByteOrderMark(_ value: String) -> String {
+        value.hasPrefix("\u{FEFF}") ? String(value.dropFirst()) : value
+    }
+
+    /// iPhone Storage copies as plain text, and the phone is where that screen lives: the
+    /// clipboard is the shortest way in, so the sheet reads it without a trip through Files.
+    private func pasteFromClipboard() {
+        guard let pasted = UIPasteboard.general.string, !pasted.isEmpty else {
+            message = "The clipboard is empty. Copy the rows of Settings > General > iPhone Storage first, then tap Paste."
+            return
+        }
+
+        text = pasted
+        message = "Pasted \(pasted.count) characters. Check the list and tap Import."
     }
 }
 
@@ -191,6 +221,15 @@ extension ImportAppsView {
                     showFileImporter = true
                 } label: {
                     Label("Choose file…", systemImage: "doc.badge.plus")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.blue)
+                }
+                .buttonStyle(PressableCardStyle())
+
+                Button {
+                    pasteFromClipboard()
+                } label: {
+                    Label("Paste", systemImage: "doc.on.clipboard")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(Theme.blue)
                 }

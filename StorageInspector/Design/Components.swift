@@ -31,6 +31,54 @@ struct PressableCardStyle: ButtonStyle {
     }
 }
 
+/// Grey explanation that starts collapsed.
+///
+/// The Settings screen explains the private-API scan in a paragraph long enough to fill half the
+/// screen. Three lines plus a "Show more" button keep that explanation in its row, and the whole
+/// text is still one tap away.
+struct ExpandableNote: View {
+    let text: String
+    /// Lines shown before the button is tapped.
+    var collapsedLines: Int = 3
+
+    @State private var isExpanded = false
+
+    /// A short note never needs the button.
+    private var isCollapsible: Bool { text.count > 180 }
+
+    private var collapsedLimit: Int? { isExpanded ? nil : collapsedLines }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(text)
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.tertiaryLabel)
+                .multilineTextAlignment(.leading)
+                .lineLimit(collapsedLimit)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if isCollapsible {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        isExpanded.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(isExpanded ? "Show less" : "Show more")
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.blue)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableCardStyle())
+            }
+        }
+    }
+}
+
 /// Rounded icon tile: the resolved picture when `AppIconLoader` has one (icon of the installed
 /// app, a bundled PNG or the App Store artwork), otherwise a gradient stand-in with an SF Symbol.
 struct AppIconView: View {
@@ -131,7 +179,7 @@ struct ActionButton: View {
     }
 }
 
-/// Rounded search field pinned above the tab bar.
+/// Rounded capsule search field: a magnifier on the left, a clear button on the right.
 struct SearchField: View {
     let placeholder: String
     @Binding var text: String

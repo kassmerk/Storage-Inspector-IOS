@@ -49,10 +49,10 @@ enum AppIconStyle: String, CaseIterable, Identifiable {
     /// Diagonal gradient of the shipped PNG, used for the in-app preview tiles.
     var gradient: [Color] {
         switch self {
-        case .orange: return [Color(hex: 0xFFA320), Color(hex: 0xFF4A00)]
-        case .indigo: return [Color(hex: 0x7C79F2), Color(hex: 0x5B57E0)]
-        case .graphite: return [Color(hex: 0x2E2E31), Color(hex: 0x0A0A0C)]
-        case .crimson: return [Color(hex: 0xAE0016), Color(hex: 0x140608)]
+        case .orange: return [Color(hex: 0xFF9216), Color(hex: 0xF03408)]
+        case .indigo: return [Color(hex: 0x807CF4), Color(hex: 0x4E4AD6)]
+        case .graphite: return [Color(hex: 0x3C3C3F), Color(hex: 0x08080A)]
+        case .crimson: return [Color(hex: 0xB20A1A), Color(hex: 0x100306)]
         }
     }
 

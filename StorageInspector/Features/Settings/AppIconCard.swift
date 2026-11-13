@@ -184,31 +184,31 @@ struct AppIconGlyph: View {
 
             ZStack {
                 Path { path in
-                    path.move(to: CGPoint(x: w * 0.255, y: h * 0.468))
-                    path.addLine(to: CGPoint(x: w * 0.318, y: h * 0.332))
+                    path.move(to: CGPoint(x: w * 0.283, y: h * 0.472))
+                    path.addLine(to: CGPoint(x: w * 0.372, y: h * 0.331))
                     path.addQuadCurve(
-                        to: CGPoint(x: w * 0.378, y: h * 0.300),
-                        control: CGPoint(x: w * 0.330, y: h * 0.300)
+                        to: CGPoint(x: w * 0.414, y: h * 0.302),
+                        control: CGPoint(x: w * 0.380, y: h * 0.308)
                     )
-                    path.addLine(to: CGPoint(x: w * 0.622, y: h * 0.300))
+                    path.addLine(to: CGPoint(x: w * 0.586, y: h * 0.302))
                     path.addQuadCurve(
-                        to: CGPoint(x: w * 0.682, y: h * 0.332),
-                        control: CGPoint(x: w * 0.670, y: h * 0.300)
+                        to: CGPoint(x: w * 0.628, y: h * 0.331),
+                        control: CGPoint(x: w * 0.620, y: h * 0.308)
                     )
-                    path.addLine(to: CGPoint(x: w * 0.745, y: h * 0.468))
+                    path.addLine(to: CGPoint(x: w * 0.717, y: h * 0.472))
                     path.closeSubpath()
                 }
                 .fill(Color.white)
 
                 Capsule(style: .continuous)
                     .fill(Color.white)
-                    .frame(width: w * 0.490, height: h * 0.185)
-                    .position(x: w * 0.500, y: h * 0.578)
+                    .frame(width: w * 0.490, height: h * 0.156)
+                    .position(x: w * 0.500, y: h * 0.572)
 
                 Circle()
                     .fill(Color.white)
-                    .frame(width: w * 0.076, height: w * 0.076)
-                    .position(x: w * 0.632, y: h * 0.578)
+                    .frame(width: w * 0.086, height: w * 0.086)
+                    .position(x: w * 0.655, y: h * 0.572)
                     .blendMode(.destinationOut)
             }
             .compositingGroup()

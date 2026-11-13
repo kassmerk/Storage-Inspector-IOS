@@ -17,7 +17,7 @@ final class StorageStore: ObservableObject {
     @Published private(set) var installedApps: [AppItem] = []
     /// Apps the URL-scheme probe confirmed (`AppSchemeProbe`). This is the only list a normally
     /// signed app can get on iOS builds that keep LaunchServices closed — it is a real answer, just
-    /// for 44 hand-picked apps and without sizes.
+    /// for the 50 hand-picked apps of `AppSchemeProbe` and without sizes.
     @Published private(set) var detectedApps: [AppItem] = []
     /// The list the user imported from a computer (`ImportedAppsStore` + `AppListParser`). This is
     /// the only source that can show *every* app on iOS 26: a sandboxed build cannot read the
@@ -96,7 +96,7 @@ final class StorageStore: ObservableObject {
 
     /// Asks the URL-scheme probe which apps of its fixed list are on this device.
     ///
-    /// Runs on the main thread on purpose: `canOpenURL` is a UIKit call, and the 44 synchronous
+    /// Runs on the main thread on purpose: `canOpenURL` is a UIKit call, and the 50 synchronous
     /// checks finish in milliseconds — a background hop would only add a flicker. The result is a
     /// list of apps that are really installed; only their sizes stay unknown.
     func loadDetectedApps() {

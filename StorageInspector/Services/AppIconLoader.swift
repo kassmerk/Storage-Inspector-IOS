@@ -9,7 +9,8 @@ import UIKit
 ///    get in (see `tools/make-app-icon.ps1`);
 /// 2. the icon of the app really installed on this device (private API behind
 ///    `InstalledAppsProvider`), tried whenever iOS still answers that call *and* the bundle is
-///    really on the device;
+///    really on the device. A bundle the URL-scheme probe confirmed also counts — but only as the
+///    last resort, after the store had nothing to offer;
 /// 3. the official App Store artwork, looked up by bundle id first and by app name second;
 /// 4. nothing, and the tile keeps its gradient + SF Symbol placeholder.
 ///
@@ -28,9 +29,11 @@ final class AppIconLoader: ObservableObject {
 
     private let session: URLSession
     private let cacheDirectory: URL
-    /// Storefront used for the artwork lookups. Asking the US store about an app that only exists
-    /// in, say, the Russian one returns nothing, which used to leave a grey tile behind.
-    private let storefront: String
+    /// Storefronts used for the artwork lookups, in order: the user's own region first, then the
+    /// two stores that carry most of the world's catalogue. Asking only the local one left rows
+    /// without a picture whenever the app is sold in another region (a Russian app in a US store,
+    /// for instance) and used to hand the name search a stranger's icon instead.
+    private let storefronts: [String]
     /// Read once on the main thread so the background work never touches `UIScreen`.
     private let scale: CGFloat
     /// Ids already handled in this session, so a scrolling list does not re-request them.
@@ -39,18 +42,23 @@ final class AppIconLoader: ObservableObject {
     init(session: URLSession = AppIconLoader.makeSession()) {
         self.session = session
         self.scale = UIScreen.main.scale
-        self.storefront = Locale.current.region?.identifier ?? "US"
+        self.storefronts = AppIconLoader.storefronts(locale: Locale.current)
 
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        // The folder name is versioned: the cache used to keep the first picture a lookup returned
+        // (for one app that was the wrong artwork), and a new name is what makes every row ask the
+        // store again instead of keeping a stale file forever. `v3` also drops the pictures cached
+        // by the `v2` build, which could still hold artwork for a bundle id that has since been
+        // corrected (Telegram, Zoom, Steam, Booking, Yandex Go).
         cacheDirectory = (caches ?? URL(fileURLWithPath: NSTemporaryDirectory()))
-            .appendingPathComponent("AppIcons", isDirectory: true)
+            .appendingPathComponent("AppIcons-v3", isDirectory: true)
         try? FileManager.default.createDirectory(
             at: cacheDirectory,
             withIntermediateDirectories: true
         )
 
-        // Older builds kept one file per source ("device-…", "store-…"). The cache is one file per
-        // app now, so the leftovers are dropped instead of taking room forever.
+        // Older builds kept one file per source ("device-…", "store-…") in "AppIcons". Both are
+        // dropped instead of taking room forever.
         removeLegacyCacheFiles()
     }
 
@@ -64,6 +72,17 @@ final class AppIconLoader: ObservableObject {
             "User-Agent": "StorageInspector/1.0 (iPhone; iOS \(UIDevice.current.systemVersion))"
         ]
         return URLSession(configuration: configuration)
+    }
+
+    /// The regions to ask, in order: the phone's own storefront, then US and RU. Duplicates are
+    /// dropped, so a US or Russian phone asks its own store once.
+    private static func storefronts(locale: Locale) -> [String] {
+        var ordered: [String] = []
+        for identifier in [locale.region?.identifier, "US", "RU"] {
+            guard let identifier = identifier, !ordered.contains(identifier) else { continue }
+            ordered.append(identifier)
+        }
+        return ordered
     }
 
     /// The picture for a row, or `nil` while it is missing (the tile keeps its placeholder).
@@ -157,39 +176,69 @@ final class AppIconLoader: ObservableObject {
     }
 
     private func resolve(_ item: AppItem, deviceIcons: Bool) async -> UIImage? {
-        if deviceIcons, let device = deviceIcon(for: item) {
+        if deviceIcons, let device = deviceIcon(for: item, trusted: false) {
             return device
         }
-        return await storeArtwork(for: item)
+        if let artwork = await storeArtwork(for: item) {
+            return artwork
+        }
+        // Nothing in the store has this app (VK is not sold on the App Store at all), and the probe
+        // already proved the bundle is installed: the Home Screen icon is then the only honest
+        // picture. It is the last source on purpose — a store icon is official, while the private
+        // lookup may answer with a generic tile on a build that keeps it locked down.
+        if deviceIcons, item.isDetectedOnly {
+            return deviceIcon(for: item, trusted: true)
+        }
+        return nil
     }
 
-    private func deviceIcon(for item: AppItem) -> UIImage? {
+    private func deviceIcon(for item: AppItem, trusted: Bool) -> UIImage? {
         guard let bundleID = item.bundleID else { return nil }
-        return InstalledAppsProvider.icon(bundleID: bundleID, scale: scale)
+        return InstalledAppsProvider.icon(bundleID: bundleID, scale: scale, trusted: trusted)
     }
 
-    /// The official artwork: `lookup?bundleId=…` first, then a search by name. A search hit is
-    /// accepted only when the name matches, so a renamed or store-less app never wears a
-    /// stranger's icon.
+    /// The official artwork: `lookup?bundleId=…` first (the phone's storefront, then US and RU),
+    /// then a search by name. Both answers are checked against the bundle id and the name, because
+    /// a name search also answers with another app that happens to share the words — a wrong
+    /// picture is worse than the placeholder.
     private func storeArtwork(for item: AppItem) async -> UIImage? {
-        if
-            let bundleID = item.bundleID,
-            let url = lookupURL(bundleID: bundleID),
-            let image = await artwork(from: url, matching: nil)
-        {
-            return image
+        if let bundleID = item.bundleID {
+            for storefront in storefronts {
+                guard
+                    let url = lookupURL(bundleID: bundleID, storefront: storefront),
+                    let image = await artwork(from: url, matching: nil, bundleID: bundleID)
+                else { continue }
+                return image
+            }
         }
 
-        guard let endpoint = searchURL(term: item.name) else { return nil }
-        return await artwork(from: endpoint, matching: item.name)
+        for storefront in storefronts {
+            guard let endpoint = searchURL(term: item.name, storefront: storefront) else { break }
+            if let image = await artwork(
+                from: endpoint,
+                matching: item.name,
+                bundleID: item.bundleID
+            ) {
+                return image
+            }
+        }
+        return nil
     }
 
-    private func artwork(from url: URL, matching name: String?) async -> UIImage? {
+    private func artwork(
+        from url: URL,
+        matching name: String?,
+        bundleID: String? = nil
+    ) async -> UIImage? {
         do {
             let (payload, _) = try await session.data(from: url)
             let response = try JSONDecoder().decode(LookupResponse.self, from: payload)
             guard
-                let result = AppIconLoader.bestResult(in: response.results, matching: name),
+                let result = AppIconLoader.bestResult(
+                    in: response.results,
+                    matching: name,
+                    bundleID: bundleID
+                ),
                 let artworkURL = AppIconLoader.largeArtworkURL(result)
             else { return nil }
 
@@ -230,7 +279,7 @@ final class AppIconLoader: ObservableObject {
 
     // MARK: - Network helpers
 
-    private func lookupURL(bundleID: String) -> URL? {
+    private func lookupURL(bundleID: String, storefront: String) -> URL? {
         var components = URLComponents(string: "https://itunes.apple.com/lookup")
         components?.queryItems = [
             URLQueryItem(name: "bundleId", value: bundleID),
@@ -241,7 +290,7 @@ final class AppIconLoader: ObservableObject {
 
     /// Finds the artwork of apps whose bundle id the store does not know (renamed builds, apps
     /// that were pulled from sale, region-locked releases).
-    private func searchURL(term: String) -> URL? {
+    private func searchURL(term: String, storefront: String) -> URL? {
         let trimmed = term.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 2 else { return nil }
 
@@ -256,23 +305,40 @@ final class AppIconLoader: ObservableObject {
     }
 
     /// Without a name to match, the first hit is the answer; with one, only a result whose title
-    /// really is that app gets through.
+    /// really is that app gets through. A hit under another bundle id never does — the store
+    /// answers a name search with whatever shares the words, and that used to put a stranger's
+    /// icon on a row.
     private static func bestResult(
         in results: [LookupResponse.Result],
-        matching name: String?
+        matching name: String?,
+        bundleID: String?
     ) -> LookupResponse.Result? {
-        guard let name = name else { return results.first }
+        let hits = matchingBundle(results, bundleID: bundleID)
+        guard let name = name else { return hits.first }
 
         let wanted = normalized(name)
-        guard wanted.count >= 3 else { return results.first }
+        guard wanted.count >= 3 else { return hits.first }
 
-        return results.first { result in
+        return hits.first { result in
             guard let title = result.trackName else { return false }
             let candidate = normalized(title)
             guard candidate.count >= 3 else { return false }
             // Exact match only. The old prefix rule gave "Photos" the icon of an unrelated app
             // called "Photos+" — a wrong picture is worse than the gradient placeholder.
             return candidate == wanted
+        }
+    }
+
+    /// The hits that can belong to `bundleID`: the store always sends the id back, so a result
+    /// with a different id is another app with a similar name.
+    private static func matchingBundle(
+        _ results: [LookupResponse.Result],
+        bundleID: String?
+    ) -> [LookupResponse.Result] {
+        guard let bundleID = bundleID else { return results }
+        return results.filter { result in
+            guard let found = result.bundleId else { return true }
+            return found == bundleID
         }
     }
 
@@ -328,6 +394,15 @@ final class AppIconLoader: ObservableObject {
 
     private func removeLegacyCacheFiles() {
         let manager = FileManager.default
+
+        // The pre-1.4 folder ("AppIcons") and the v2 one: the first was keyed the old way, the
+        // second could hold artwork resolved before the store answer was checked against the
+        // bundle id. Both are dropped instead of taking room forever.
+        let cachesRoot = cacheDirectory.deletingLastPathComponent()
+        for legacy in ["AppIcons", "AppIcons-v2"] {
+            try? manager.removeItem(at: cachesRoot.appendingPathComponent(legacy, isDirectory: true))
+        }
+
         guard let entries = try? manager.contentsOfDirectory(
             at: cacheDirectory,
             includingPropertiesForKeys: nil
@@ -347,6 +422,9 @@ final class AppIconLoader: ObservableObject {
 
         struct Result: Decodable {
             let trackName: String?
+            /// The id the store has for the result; checked against the row's bundle id so a name
+            /// search cannot hand over someone else's icon.
+            let bundleId: String?
             let artworkUrl60: String?
             let artworkUrl100: String?
             let artworkUrl512: String?

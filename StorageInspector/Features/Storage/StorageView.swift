@@ -38,6 +38,10 @@ struct StorageView: View {
     @State var showImportSheet = false
     @State var search: String = ""
     @State var sortMode: SizeSortMode = .name
+    /// The header shows a magnifier instead of a permanently pinned search field: the list is the
+    /// screen, and the field only appears when it is asked for.
+    @State var isSearchVisible = false
+    @FocusState var searchFocused: Bool
 
     var unit: SizeUnit { SizeUnit(rawValue: unitRaw) ?? .automatic }
 
@@ -73,11 +77,29 @@ struct StorageView: View {
     var allApps: [AppItem] {
         switch listSource {
         case .installed: return store.installedApps
-        case .imported: return store.importedApps
+        case .imported:
+            // The imported list is the complete one, but the probe can still know an app the text
+            // missed (a sideloaded build, a reinstall after the list was made). Appending those
+            // rows keeps the screen complete instead of dropping what iOS itself confirmed.
+            let importedIDs = Set(store.importedApps.map { $0.id })
+            let importedNames = Set(store.importedApps.map { ImportedApp.key($0.name) })
+            let extra = store.detectedApps.filter { app in
+                !importedIDs.contains(app.id) && !importedNames.contains(ImportedApp.key(app.name))
+            }
+            return store.importedApps + extra
         case .detected: return store.detectedApps
         case .demo: return store.apps
         case .none: return []
         }
+    }
+
+    /// How many rows on screen came from the probe instead of the imported text. Only the imported
+    /// mode can have them: the text is a snapshot, and an app installed after it was made is missing
+    /// from it until the next import. The footnote prints both numbers, so a short list is explained
+    /// instead of looking like lost rows.
+    var probedExtraCount: Int {
+        guard case .imported = listSource else { return 0 }
+        return max(0, allApps.count - store.importedApps.count)
     }
 
     var applicationsBytes: Int64 {
@@ -130,6 +152,16 @@ struct StorageView: View {
                             .padding(.horizontal, 20)
                             .padding(.top, 4)
 
+                        if isSearchVisible {
+                            searchRow
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
+
+                        if case .detected = listSource {
+                            importHintCard
+                                .padding(.horizontal, 16)
+                        }
+
                         if visibleApps.isEmpty {
                             emptySearchCard
                                 .padding(.horizontal, 16)
@@ -150,8 +182,6 @@ struct StorageView: View {
                 }
                 .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
-
-                searchBar
             }
             .background(Theme.background.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)

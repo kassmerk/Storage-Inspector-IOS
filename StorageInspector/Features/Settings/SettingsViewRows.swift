@@ -43,13 +43,12 @@ extension SettingsView {
     }
 
     /// Small grey explanation under a switch, aligned with the row title.
+    ///
+    /// Collapsed to three lines: these notes explain the private API in a paragraph, and expanded
+    /// by default they pushed every following row off the screen. `ExpandableNote` keeps the
+    /// "Show more" button in the same place.
     func noteText(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 12))
-            .foregroundStyle(Theme.tertiaryLabel)
-            .multilineTextAlignment(.leading)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        ExpandableNote(text: text)
             .padding(.leading, 38)
             .padding(.bottom, 8)
     }

@@ -439,7 +439,7 @@ enum InstalledAppsProvider {
 
     /// The real Home Screen icon of `bundleID`, or `nil` when iOS refuses or the bundle is not
     /// on this device. `nil` is a normal answer: the caller then downloads the App Store artwork.
-    static func icon(bundleID: String, scale: CGFloat) -> UIImage? {
+    static func icon(bundleID: String, scale: CGFloat, trusted: Bool = false) -> UIImage? {
         if let proxy = proxy(for: bundleID), let image = icon(from: proxy) {
             return image
         }
@@ -448,7 +448,11 @@ enum InstalledAppsProvider {
         // "missing app" tile, and it would hide the artwork the caller can download instead.
         // Apple's own apps are always there even before the scan has run (demo mode), and they
         // all sit under `com.apple.*`, so those are always fair game.
-        if isInstalled(bundleID) || bundleID.hasPrefix("com.apple."),
+        //
+        // `trusted` is the third way in: an app the URL-scheme probe already confirmed is installed
+        // even though the sandbox keeps the installed-app list closed, and its Home Screen icon is
+        // the only correct picture available for an app the store does not sell (VK, for one).
+        if trusted || isInstalled(bundleID) || bundleID.hasPrefix("com.apple."),
            let image = rawIcon(bundleID: bundleID, scale: scale),
            !isPlaceholder(image, scale: scale) {
             return image
