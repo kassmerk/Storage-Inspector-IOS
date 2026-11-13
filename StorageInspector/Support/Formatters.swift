@@ -31,6 +31,8 @@ enum SettingsKeys {
     static let showDemoApps = "storageInspector.showDemoApps"
     /// Makes the scan list Apple's hidden system services as well (off by default).
     static let showHiddenApps = "storageInspector.showHiddenApps"
+    /// The app list imported from a computer (`ImportedAppsStore`), JSON encoded.
+    static let importedApps = "storageInspector.importedApps"
 }
 
 enum Formatters {

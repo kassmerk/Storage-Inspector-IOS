@@ -60,6 +60,98 @@ enum InstalledAppsProvider {
         return nil
     }
 
+    // MARK: - Diagnostics
+
+    /// One row of the report the Settings screen prints.
+    struct Diagnostic {
+        let title: String
+        let value: String
+    }
+
+    /// What the private API actually answers on this device, in the order that separates a renamed
+    /// API from a sandbox that is not allowed to see other apps:
+    ///
+    /// * the class and the factory — `not found` means this iOS build renamed the whole thing;
+    /// * every list selector with its own count — a class that answers while all four counts are `0`
+    ///   is the signature of a normally signed (Feather / certificate) install: iOS hides the
+    ///   LaunchServices database from it, and TrollStore's `platform-application` entitlement is
+    ///   what lifts the restriction;
+    /// * the `applicationType` of everything that came back, so a filter can never be blamed for a
+    ///   list the system never sent;
+    /// * every bundle folder with the number of containers and `.app` bundles in it;
+    /// * the rows the full scan ends up with, which is what the Storage screen shows.
+    ///
+    /// The report runs the real scan at the end, so it costs what the list costs.
+    static func diagnostics(includeHidden: Bool) -> [Diagnostic] {
+        var rows: [Diagnostic] = []
+
+        let device = UIDevice.current
+        rows.append(Diagnostic(title: "iOS", value: device.systemVersion + " · " + device.model))
+        rows.append(Diagnostic(
+            title: "LSApplicationWorkspace",
+            value: workspaceClass == nil ? "not found" : "found"
+        ))
+        rows.append(Diagnostic(
+            title: "defaultWorkspace",
+            value: workspaceFactory == nil ? "missing" : "answered"
+        ))
+        rows.append(Diagnostic(
+            title: "Icon lookup",
+            value: iconFunction == nil ? "missing" : "answered"
+        ))
+
+        let workspace = defaultWorkspace()
+        if workspace == nil {
+            rows.append(Diagnostic(title: "workspace", value: "nil"))
+        }
+
+        var types: [String: Int] = [:]
+
+        for name in listSelectorNames {
+            let selector = NSSelectorFromString(name)
+            guard let workspace = workspace, workspace.responds(to: selector) else {
+                rows.append(Diagnostic(title: name, value: "no such selector"))
+                continue
+            }
+
+            let elements = array(from: performObject(workspace, selector))
+            rows.append(Diagnostic(title: name, value: "\(elements.count) entries"))
+
+            for element in elements {
+                guard let proxy = element as? NSObjectProtocol else { continue }
+                let type = string(proxy, "applicationType") ?? "unknown"
+                types[type, default: 0] += 1
+            }
+        }
+
+        if !types.isEmpty {
+            let histogram = types
+                .sorted { $0.key < $1.key }
+                .map { "\($0.key) \($0.value)" }
+                .joined(separator: " · ")
+            rows.append(Diagnostic(title: "applicationType", value: histogram))
+        }
+
+        let manager = FileManager.default
+        for root in bundleRoots {
+            guard let containers = try? manager.contentsOfDirectory(atPath: root) else {
+                rows.append(Diagnostic(title: root, value: "not readable"))
+                continue
+            }
+            let bundles = bundleApps(in: root).count
+            rows.append(Diagnostic(
+                title: root,
+                value: "\(containers.count) containers · \(bundles) bundles"
+            ))
+        }
+
+        rows.append(Diagnostic(
+            title: "Rows returned",
+            value: "\(loadApps(includeHidden: includeHidden).count)"
+        ))
+        return rows
+    }
+
     // MARK: - Registry
 
     /// Proxies seen during the last scan, keyed by bundle id. The icon lookups go through them,
@@ -71,6 +163,37 @@ enum InstalledAppsProvider {
     /// Bundle ids found by walking the bundle folders instead of the LaunchServices database.
     /// Those apps have no proxy, but they are on the device all the same.
     private static var folderBundleIDs: Set<String> = []
+    /// The `.app` folder of every app the last scan saw, keyed by bundle id.
+    ///
+    /// It is what makes the icon of a sideloaded app possible: `Null's Clash`, a TrollStore build,
+    /// any unsigned `.ipa` never reached the App Store, so neither the proxy nor the artwork lookup
+    /// has a picture for it — the PNG inside its own bundle is the only one, and it is exactly the
+    /// file the Home Screen draws.
+    private static var bundleURLs: [String: URL] = [:]
+
+    /// `true` when LaunchServices still answers a question about one bundle id.
+    ///
+    /// `-applicationProxyForIdentifier:` asks about a single bundle instead of listing everything,
+    /// and the sandbox sometimes keeps that channel open when the list itself comes back empty. It
+    /// needs no `LSApplicationQueriesSchemes` declaration, which makes it the cheaper of the two
+    /// channels `AppSchemeProbe` tries.
+    static func isBundlePresent(_ bundleID: String) -> Bool {
+        let known = knownBundleIDs
+        if known.contains(bundleID) { return true }
+
+        let name = "applicationProxyForIdentifier:"
+        let selector = NSSelectorFromString(name)
+        guard
+            let workspace = defaultWorkspace(),
+            workspace.responds(to: selector)
+        else { return false }
+
+        // A non-nil answer means LaunchServices knows this bundle; nil means it does not. The proxy
+        // itself is not kept: the whole point of the call is the yes/no, and a stale proxy would be
+        // rejected by the private getters anyway.
+        let proxy = workspace.perform(selector, with: bundleID as NSString)?.takeUnretainedValue()
+        return proxy != nil
+    }
 
     /// `true` when the last scan found this bundle id on the device.
     static func isInstalled(_ bundleID: String) -> Bool {
@@ -87,16 +210,33 @@ enum InstalledAppsProvider {
     }
 
     private static func remember(_ bundleID: String, _ proxy: NSObjectProtocol) {
+        // `bundleURL` answers on every version that has the proxy at all, and it is the folder the
+        // icon and the byte count of a sideloaded app are read from when the getters stay silent.
+        let folder = performObject(proxy, NSSelectorFromString("bundleURL")) as? URL
+
         registryLock.lock()
         registry[bundleID] = proxy
+        if let folder = folder {
+            bundleURLs[bundleID] = folder
+        }
         registryLock.unlock()
     }
 
     /// Remembers a bundle that came from the folder scan, so its icon lookup is allowed too.
-    private static func remember(_ bundleID: String) {
+    private static func remember(_ bundleID: String, folder: URL? = nil) {
         registryLock.lock()
         folderBundleIDs.insert(bundleID)
+        if let folder = folder {
+            bundleURLs[bundleID] = folder
+        }
         registryLock.unlock()
+    }
+
+    /// The `.app` folder of a bundle the last scan saw, when one of the sources handed it over.
+    private static func bundleURL(for bundleID: String) -> URL? {
+        registryLock.lock()
+        defer { registryLock.unlock() }
+        return bundleURLs[bundleID]
     }
 
     private static func proxy(for bundleID: String) -> NSObjectProtocol? {
@@ -171,10 +311,23 @@ enum InstalledAppsProvider {
 
         // The apps the database left out. Without this pass a hidden TrollStore install had no row
         // at all, which is how an app could sit on the device and be missing from the list.
-        for (bundleID, app) in onDisk.apps where !seen.contains(bundleID) {
+        // The dictionary is copied out first: the measuring call below mutates the scan.
+        let folderApps = onDisk.apps
+        for (bundleID, app) in folderApps where !seen.contains(bundleID) {
             seen.insert(bundleID)
-            remember(bundleID)
-            apps.append(app)
+            remember(bundleID, folder: onDisk.urls[bundleID])
+            apps.append(
+                InstalledApp(
+                    bundleID: app.bundleID,
+                    name: app.name,
+                    version: app.version,
+                    developer: app.developer,
+                    // The folder is right there, so the size is measured even on the rows no proxy
+                    // ever answered for.
+                    appSize: onDisk.size(of: bundleID),
+                    dataSize: nil
+                )
+            )
         }
 
         return apps.sorted {
@@ -206,17 +359,20 @@ enum InstalledAppsProvider {
     /// Walks the places where iOS keeps app bundles. A stock sandbox may not read any of them, so
     /// the answer is simply empty there; TrollStore and jailbroken devices do get the full list,
     /// including the apps LaunchServices refuses to hand out.
-    private static func scanBundleFolders() -> FolderScan {
-        let roots = [
-            "/var/containers/Bundle/Application",
-            "/private/var/containers/Bundle/Application",
-            "/Applications",
-            "/var/jb/var/containers/Bundle/Application",
-            "/var/jb/Applications"
-        ]
+    /// Every place iOS keeps app bundles. The `/private/var` twin and the `/var/jb` prefixes are
+    /// listed as well: a TrollStore install and a rootless jailbreak land in one of those, and the
+    /// same app is reachable through two of them often enough to be worth the extra checks.
+    private static let bundleRoots = [
+        "/var/containers/Bundle/Application",
+        "/private/var/containers/Bundle/Application",
+        "/Applications",
+        "/var/jb/var/containers/Bundle/Application",
+        "/var/jb/Applications"
+    ]
 
+    private static func scanBundleFolders() -> FolderScan {
         var scan = FolderScan()
-        for root in roots {
+        for root in bundleRoots {
             for (bundleID, app, url) in bundleApps(in: root) where scan.urls[bundleID] == nil {
                 scan.apps[bundleID] = app
                 scan.urls[bundleID] = url
@@ -292,9 +448,16 @@ enum InstalledAppsProvider {
         // "missing app" tile, and it would hide the artwork the caller can download instead.
         // Apple's own apps are always there even before the scan has run (demo mode), and they
         // all sit under `com.apple.*`, so those are always fair game.
-        guard isInstalled(bundleID) || bundleID.hasPrefix("com.apple.") else { return nil }
-        guard let image = rawIcon(bundleID: bundleID, scale: scale) else { return nil }
-        return isPlaceholder(image, scale: scale) ? nil : image
+        if isInstalled(bundleID) || bundleID.hasPrefix("com.apple."),
+           let image = rawIcon(bundleID: bundleID, scale: scale),
+           !isPlaceholder(image, scale: scale) {
+            return image
+        }
+
+        // Last source: the picture shipped inside the bundle itself. A sideloaded app has no App
+        // Store artwork, and iOS only draws an icon for a bundle it has indexed, so this PNG is the
+        // only picture `Null's Clash`, Feather or any TrollStore build can get.
+        return bundleIcon(bundleID: bundleID)
     }
 
     /// `-[LSApplicationProxy iconDataForVariant:]` — the exact icon iOS draws on the Home Screen.
@@ -329,6 +492,96 @@ enum InstalledAppsProvider {
             0,
             scale
         )?.takeUnretainedValue()
+    }
+
+    /// The icon file that ships inside the bundle itself.
+    ///
+    /// `CFBundleIcons` names it, and when the plist is terse the biggest `AppIcon*.png` in the
+    /// folder is taken instead. This is the only source left for an app that never went through the
+    /// App Store: the proxy has no artwork for it, and the private UIImage lookup answers with the
+    /// grey "missing app" tile. It needs the `.app` folder, so it works exactly when the folder scan
+    /// works — TrollStore and jailbroken installs.
+    private static func bundleIcon(bundleID: String) -> UIImage? {
+        guard let bundle = bundleURL(for: bundleID) else { return nil }
+
+        let manager = FileManager.default
+        for name in iconFileNames(in: bundle) {
+            let url = bundle.appendingPathComponent(name)
+            guard manager.fileExists(atPath: url.path) else { continue }
+            if let image = UIImage(contentsOfFile: url.path) {
+                return image
+            }
+        }
+
+        guard let files = try? manager.contentsOfDirectory(
+            at: bundle,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else { return nil }
+
+        // `@3x` sorts above `@2x`, so the sharpest variant comes first without reading any
+        // attributes: a directory listing per bundle is all this costs.
+        let candidates = files
+            .filter { $0.pathExtension.lowercased() == "png" }
+            .filter {
+                let name = $0.lastPathComponent.lowercased()
+                return name.hasPrefix("appicon") || name.hasPrefix("icon")
+            }
+            .sorted { $0.lastPathComponent > $1.lastPathComponent }
+
+        for candidate in candidates {
+            if let image = UIImage(contentsOfFile: candidate.path) {
+                return image
+            }
+        }
+        return nil
+    }
+
+    /// Icon file names declared by the bundle's `Info.plist`, sharpest first and with the `.png`
+    /// suffix filled in. Both the modern `CFBundleIcons` dictionary and the older flat keys are
+    /// read, because sideloaded bundles carry either one.
+    private static func iconFileNames(in bundle: URL) -> [String] {
+        let infoURL = bundle.appendingPathComponent("Info.plist")
+        guard
+            let data = try? Data(contentsOf: infoURL),
+            let plist = (try? PropertyListSerialization.propertyList(
+                from: data,
+                options: [],
+                format: nil
+            )) as? [String: Any]
+        else { return [] }
+
+        var declared: [String] = []
+
+        for key in ["CFBundleIcons", "CFBundleIcons~ipad"] {
+            guard let icons = plist[key] as? [String: Any] else { continue }
+            guard let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] else { continue }
+
+            if let files = primary["CFBundleIconFiles"] as? [String] {
+                declared.append(contentsOf: files)
+            }
+            if let name = primary["CFBundleIconName"] as? String {
+                declared.append(name)
+            }
+        }
+
+        if let files = plist["CFBundleIconFiles"] as? [String] {
+            declared.append(contentsOf: files)
+        }
+        if let file = plist["CFBundleIconFile"] as? String {
+            declared.append(file)
+        }
+
+        // The plist lists the small file first, so the array is walked backwards. Every name is
+        // also tried with `.png`: the extension is optional in `CFBundleIconFile`.
+        var names: [String] = []
+        for name in declared.reversed() {
+            names.append(name)
+            if !name.contains(".") {
+                names.append(name + ".png")
+            }
+        }
+        return names
     }
 
     /// The grey tile the private lookup returns for anything it cannot resolve. It is captured
@@ -403,13 +656,23 @@ enum InstalledAppsProvider {
         return unsafeBitCast(method_getImplementation(method), to: WorkspaceFactory.self)
     }()
 
+    /// Every list selector an iOS build has answered with. `visibleApplications` is asked too: on
+    /// the versions where the other three come back empty for a normally signed app, it is the one
+    /// that still answers, and a duplicate entry costs nothing because the loop dedupes by bundle id.
+    private static let listSelectorNames = [
+        "allInstalledApplications",
+        "installedApplications",
+        "allApplications",
+        "visibleApplications"
+    ]
+
     /// Every list selector this iOS build still answers. They are merged, because on some
     /// versions `allInstalledApplications` leaves out apps that `allApplications` still returns.
     private static let listSelectors: [Selector] = {
         guard let cls = workspaceClass else { return [] }
 
         var found: [Selector] = []
-        for name in ["allInstalledApplications", "installedApplications", "allApplications"] {
+        for name in listSelectorNames {
             let selector = NSSelectorFromString(name)
             if class_getInstanceMethod(cls, selector) != nil {
                 found.append(selector)

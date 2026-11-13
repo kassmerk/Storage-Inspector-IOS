@@ -39,6 +39,32 @@ if [ -z "$APP" ]; then
   exit 1
 fi
 
+echo "==> URL scheme queries (Services/AppSchemeProbe.swift)"
+SCHEME_PLIST="$ROOT/StorageInspector/Resources/Info.plist"
+if [ ! -f "$SCHEME_PLIST" ]; then
+  SCHEME_PLIST="$ROOT/Resources/Info.plist"
+fi
+if [ ! -f "$SCHEME_PLIST" ]; then
+  echo "error: the source Info.plist with LSApplicationQueriesSchemes was not found" >&2
+  exit 1
+fi
+if ! /usr/libexec/PlistBuddy -c "Print :LSApplicationQueriesSchemes:0" "$APP/Info.plist" >/dev/null 2>&1; then
+  echo "    missing from the built Info.plist - merging it from $SCHEME_PLIST"
+  python3 - "$APP/Info.plist" "$SCHEME_PLIST" <<'PY'
+import plistlib, sys
+
+target, source = sys.argv[1], sys.argv[2]
+with open(target, "rb") as handle:
+    info = plistlib.load(handle)
+with open(source, "rb") as handle:
+    extra = plistlib.load(handle)
+info["LSApplicationQueriesSchemes"] = extra["LSApplicationQueriesSchemes"]
+with open(target, "wb") as handle:
+    plistlib.dump(info, handle)
+PY
+fi
+/usr/libexec/PlistBuddy -c "Print :LSApplicationQueriesSchemes" "$APP/Info.plist" | head -n 5
+
 echo "==> Loose icon files"
 ICON_SRC="$(find "$ROOT" -maxdepth 8 -name 'AppIcon-1024.png' -path '*AppIcon.appiconset*' | head -n 1)"
 if [ -n "$ICON_SRC" ]; then

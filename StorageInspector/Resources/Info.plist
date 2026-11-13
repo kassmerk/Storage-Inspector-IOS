@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  The only way a sandboxed app may ask iOS "is this app installed?": canOpenURL on a scheme
+	  the other app registers. iOS answers nothing for a scheme that is not listed here, and the
+	  list is capped at 50 entries per app — AppSchemeProbe.candidates carries the same 44 apps
+	  (name, bundle id, developer, scheme) and must be kept in sync with this array.
+
+	  Everything else in Info.plist is still generated from the build settings in
+	  project.pbxproj (GENERATE_INFOPLIST_FILE = YES); this file only adds the key Xcode has no
+	  setting for.
+	-->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tg</string>
+		<string>whatsapp</string>
+		<string>instagram</string>
+		<string>snssdk1128</string>
+		<string>youtube</string>
+		<string>spotify</string>
+		<string>fb</string>
+		<string>fb-messenger</string>
+		<string>snapchat</string>
+		<string>twitter</string>
+		<string>discord</string>
+		<string>reddit</string>
+		<string>nflx</string>
+		<string>comgooglemaps</string>
+		<string>waze</string>
+		<string>googlechrome</string>
+		<string>googlegmail</string>
+		<string>googledrive</string>
+		<string>googlephotos</string>
+		<string>uber</string>
+		<string>bolt</string>
+		<string>viber</string>
+		<string>sgnl</string>
+		<string>weixin</string>
+		<string>vk</string>
+		<string>zoomus</string>
+		<string>slack</string>
+		<string>notion</string>
+		<string>ms-outlook</string>
+		<string>msteams</string>
+		<string>ms-word</string>
+		<string>ms-excel</string>
+		<string>ms-onedrive</string>
+		<string>steam</string>
+		<string>twitch</string>
+		<string>shazam</string>
+		<string>duolingo</string>
+		<string>roblox</string>
+		<string>minecraft</string>
+		<string>clashofclans</string>
+		<string>brawlstars</string>
+		<string>clashroyale</string>
+		<string>airbnb</string>
+		<string>booking</string>
+	</array>
+</dict>
+</plist>

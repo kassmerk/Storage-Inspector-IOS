@@ -6,15 +6,36 @@ enum StorageRoute: Hashable {
 }
 
 struct StorageView: View {
+    /// Where the rows on screen come from. The screen has three real sources and one demo one, and
+    /// it says which is in use instead of blending them: that is how fourteen demo rows stopped
+    /// looking like the apps on this iPhone.
+    enum ListSource {
+        /// The LaunchServices list: every installed app, with sizes. Only privileged installs.
+        case installed
+        /// The list the user imported from a computer: every app the text named, with the sizes
+        /// that text carried. On iOS 26 this is the only complete list — see `AppSchemeProbe`.
+        case imported
+        /// The URL-scheme probe: apps that are really installed, no sizes. The sandboxed case.
+        case detected
+        /// The demo dataset, only when the Settings switch is on.
+        case demo
+        /// Nothing to show.
+        case none
+    }
+
     @EnvironmentObject var store: StorageStore
     @AppStorage(SettingsKeys.sizeUnit) var unitRaw: String = SizeUnit.automatic.rawValue
-    @AppStorage(SettingsKeys.showDemoApps) var showDemoApps: Bool = true
+    /// Off by default: on iOS 26 the demo rows used to be what a Feather-signed install showed,
+    /// which read as "these are your apps". Demo data is now an explicit preview.
+    @AppStorage(SettingsKeys.showDemoApps) var showDemoApps: Bool = false
 
     /// The icon of every row: the icon of the installed app, a hand-cut PNG from the bundle,
     /// or the official App Store artwork.
     @StateObject var iconLoader = AppIconLoader()
 
     @State var path: [StorageRoute] = []
+    /// The sheet that reads an app list from a computer: the only way to see every app on iOS 26.
+    @State var showImportSheet = false
     @State var search: String = ""
     @State var sortMode: SizeSortMode = .name
 
@@ -27,7 +48,7 @@ struct StorageView: View {
 
     /// The demo dataset is only shown when the scan has nothing to offer: while it is still
     /// running the list stays empty (a flash of fake numbers would be worse), and when it comes
-    /// back empty or unsupported the demo rows step in.
+    /// back empty or unsupported the probe — or the demo rows, if switched on — step in.
     var showsDemoFallback: Bool {
         guard usesInstalledApps else { return true }
 
@@ -37,10 +58,26 @@ struct StorageView: View {
         }
     }
 
-    /// The rows on screen: the apps really installed on this iPhone, or the demo dataset.
+    /// Which source the rows below the header come from. An imported list wins over the probe: it
+    /// is the only source that can hold every app, so once it exists the screen shows it instead of
+    /// the handful of schemes iOS answered.
+    var listSource: ListSource {
+        if usesInstalledApps && !showsDemoFallback { return .installed }
+        if !store.importedApps.isEmpty { return .imported }
+        if !store.detectedApps.isEmpty { return .detected }
+        return showDemoApps ? .demo : .none
+    }
+
+    /// The rows on screen: the apps really installed on this iPhone, the imported list, the apps the
+    /// probe confirmed, or the demo dataset when it is switched on.
     var allApps: [AppItem] {
-        if usesInstalledApps && !showsDemoFallback { return store.installedApps }
-        return showDemoApps ? store.apps : []
+        switch listSource {
+        case .installed: return store.installedApps
+        case .imported: return store.importedApps
+        case .detected: return store.detectedApps
+        case .demo: return store.apps
+        case .none: return []
+        }
     }
 
     var applicationsBytes: Int64 {
@@ -96,6 +133,11 @@ struct StorageView: View {
                         if visibleApps.isEmpty {
                             emptySearchCard
                                 .padding(.horizontal, 16)
+
+                            if search.isEmpty && showsImportButton {
+                                importListButton
+                                    .padding(.horizontal, 16)
+                            }
                         } else {
                             appsCard
                         }
@@ -123,7 +165,23 @@ struct StorageView: View {
             }
         }
         .onAppear { reload() }
+        .sheet(isPresented: $showImportSheet) {
+            ImportAppsView()
+                .environmentObject(store)
+        }
         .onChange(of: showDemoApps) { _ in loadIcons() }
+        .onChange(of: store.importedApps) { _ in
+            // The imported rows are the only source that can hold the whole list, and their icons
+            // are looked up by bundle id, so the loader has to see them once the list changes.
+            iconLoader.forget()
+            loadIcons()
+        }
+        .onChange(of: store.detectedApps) { _ in
+            // The probe list arrives on the main thread right after the first pass; its icons come
+            // from the App Store artwork, so the loader has to look at the new rows once more.
+            iconLoader.forget()
+            loadIcons()
+        }
         .onChange(of: store.installedApps) { _ in
             // The installed list arrives after the first pass, and only then can the real Home
             // Screen icons be read. Forgetting the marks makes the next pass resolve once more.
@@ -132,10 +190,12 @@ struct StorageView: View {
         }
     }
 
-    /// Re-reads the numbers, the installed apps and the icons.
+    /// Re-reads the numbers, the installed apps, the imported list, the probed apps and the icons.
     func reload() {
         store.refresh()
         store.loadInstalledApps()
+        store.loadImportedApps()
+        store.loadDetectedApps()
         loadIcons()
     }
 

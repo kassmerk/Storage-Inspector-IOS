@@ -25,6 +25,13 @@ struct AppItem: Identifiable, Hashable {
     var hasKnownAppSize: Bool = true
     /// `false` when iOS hides the size of Documents & Data. The UI shows a dash then.
     var hasKnownDataSize: Bool = true
+    /// `true` for a row the URL-scheme probe found (`AppSchemeProbe`) instead of the app list.
+    /// Those rows are really installed, but iOS never tells a sandboxed app their size.
+    var isDetectedOnly: Bool = false
+    /// `true` for a row of the list the user imported from a computer (`ImportedAppsStore`). That
+    /// list can hold every app on the iPhone — the only way to see all of them on iOS 26 — but its
+    /// sizes are only as good as the text that was imported.
+    var isImported: Bool = false
 
     var totalSize: Int64 { appSize + dataSize }
 

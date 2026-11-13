@@ -37,7 +37,7 @@ struct AppDetailView: View {
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
         .confirmationDialog(
-            "Delete “\(app.name)” from the list?",
+            deleteTitle,
             isPresented: $showDeleteDialog,
             titleVisibility: .visible
         ) {
@@ -47,8 +47,25 @@ struct AppDetailView: View {
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Only the demo entry is removed. Nothing is deleted from your iPhone.")
+            Text(deleteMessage)
         }
+    }
+
+    private var deleteTitle: String {
+        app.isImported
+            ? "Remove “\(app.name)” from the imported list?"
+            : "Delete “\(app.name)” from the list?"
+    }
+
+    /// Deleting only ever edits this list: nothing on the iPhone is touched, and for a row the
+    /// URL-scheme probe found or the imported list named there is nothing to delete at all.
+    private var deleteMessage: String {
+        if app.isImported {
+            return "The row is only removed from the list you imported. Nothing is deleted from your iPhone."
+        }
+        return app.isDetectedOnly
+            ? "The app is only removed from this list. Nothing is deleted from your iPhone."
+            : "Only the demo entry is removed. Nothing is deleted from your iPhone."
     }
 
     /// The sandbox browser can only show *this* app's files, so the shortcut is hidden for the
@@ -125,6 +142,13 @@ struct AppDetailView: View {
                     store.refresh()
                 }
                 caption("Recalculated from this app's bundle and data container.")
+            } else if app.isImported {
+                caption(importedCaption)
+
+                ActionButton(title: "Remove from List", kind: .destructive) {
+                    showDeleteDialog = true
+                }
+                caption("Only this row of your imported list goes away. The app stays on your iPhone.")
             } else if app.isReal {
                 caption(installedCaption)
             } else {
@@ -137,6 +161,14 @@ struct AppDetailView: View {
                 caption("Removes the entry from the demo list. Your iPhone storage is not touched.")
             }
         }
+    }
+
+    /// What a row of the imported list can honestly say about its numbers.
+    private var importedCaption: String {
+        if app.hasKnownSize {
+            return "This row comes from the list you imported from your computer: the name, the version and every size shown above are the ones that text carried. iOS itself never reports the size of another app to this app on iOS 26, which is why the numbers can only come from an import."
+        }
+        return "This row comes from the list you imported from your computer, and that text carried no size for it, so the numbers above show a dash. Import a list that includes sizes — a CSV from a desktop tool, or a copy of Settings › General › iPhone Storage — to fill them in."
     }
 
     /// What the numbers above this caption mean for a row that came from the installed-apps scan.
